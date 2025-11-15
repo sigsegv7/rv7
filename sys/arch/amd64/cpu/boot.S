@@ -29,6 +29,7 @@
 
     .globl _start
     .extern uart_init
+    .extern uart_write
     .extern gdt_load
     .extern GDTR
 _start:
@@ -41,9 +42,20 @@ _start:
     lea GDTR(%rip), %rdi    /* Our GDTR */
     call gdt_load           /* Load our GDT */
 
+    lea bootmsg(%rip), %rdi
+    movq bootmsg_len, %rsi
+    call uart_write
 1:  cli
     hlt
     jmp 1b
+
+    .section .rodata
+bootmsg:
+    .ascii "[ preparing since 2025 ]\n"
+    .ascii "[ 00:00 delta @ crev : 89 seconds]\n"
+    .ascii "** booting rv7 ...\n"
+    .byte 0x00
+bootmsg_len:    .quad . - bootmsg
 
 /* vim: ft=gas :
 */

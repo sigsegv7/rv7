@@ -65,6 +65,7 @@ uart_init:
     pop %r12
     retq
 
+    .globl uart_write
 uart_write:
     /*
      * void uart_write(const char *s, size_t len);
