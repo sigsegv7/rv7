@@ -1,3 +1,5 @@
+.SILENT:
+override PROMPT := printf "%s\t\t%s\n"
 CC = @CC@
 LD = @LD@
 ARCH = @ARCH@
@@ -24,6 +26,7 @@ iso:
 		--efi-boot-image --protective-msdos-label iso_root/ -o $(ISO) 1>/dev/null
 	boot/limine/limine bios-install $(ISO) 1>/dev/null
 	rm -rf iso_root
+	$(PROMPT) " ISO " $(ISO)
 
 $(SYSROOT):
 	mkdir -p $(SYSROOT)/

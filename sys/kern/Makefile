@@ -1,3 +1,6 @@
+.SILENT:
+override PROMPT := printf "%s\t\t%s\n"
+
 CFILES = $(shell find . -name "*.c")
 OFILES = $(CFILES:.c=.o)
 CC =
@@ -7,4 +10,5 @@ SYS_CFLAGS =
 all: $(OFILES)
 
 %.o: %.c
+	$(PROMPT) " [CC] " $<
 	$(CC) -c $< $(SYS_CFLAGS) -I../inc/ -o $@
