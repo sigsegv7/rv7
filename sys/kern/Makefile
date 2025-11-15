@@ -2,6 +2,7 @@
 override PROMPT := printf "%s\t\t%s\n"
 
 CFILES = $(shell find . -name "*.c")
+CFILES += $(shell find ../lib -name "*.c")
 OFILES = $(CFILES:.c=.o)
 CC =
 SYS_CFLAGS =
@@ -11,4 +12,4 @@ all: $(OFILES)
 
 %.o: %.c
 	$(PROMPT) " [CC] " $<
-	$(CC) -c $< $(SYS_CFLAGS) -I../inc/ -o $@
+	$(CC) -c $< $(SYS_CFLAGS) -I../inc/ -I../inc/lib -o $@
