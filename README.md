@@ -12,7 +12,7 @@ First you must bootstrap the project by running ``./boostrap``. The project can 
 be configured by running ``./configure``.
 
 Before the system can be built, you must build yourself a toolchain by running
-``make toolchain``, this will take awhile but once it is complete the system can be built
+``make toolchain``, this will take awhile but once it is complete, the system can be built
 with a single ``make``.
 
 ## Dependencies
