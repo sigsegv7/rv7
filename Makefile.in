@@ -43,3 +43,7 @@ run:
 .PHONY: clean
 clean:
 	cd sys/; make clean ARCH=$(ARCH)
+
+.PHONY: toolchain
+toolchain: $(SYSROOT)
+	bash tools/build-toolchain.sh
