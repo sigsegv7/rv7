@@ -278,9 +278,6 @@ page_fault:
     jmp 1b
     hlt
 
-trap_dispatch:
-    retq
-
     .section .data
     .align 8
 IDT:
