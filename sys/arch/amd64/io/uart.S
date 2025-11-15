@@ -95,5 +95,36 @@ uart_write:
 .done:
     retq
 
+    .globl uart_puts
+uart_puts:
+    /*
+     * void uart_puts(const char *s);
+     */
+
+    push %r12
+    push %r13
+    push %r14
+    push %r15
+    push %rbx
+    push %rbp
+
+    mov %rsi, %rcx
+    mov %rdi, %rsi
+.putsloop:
+    lodsb
+    or %al, %al
+    jz .putsdone
+    mov $UART_COM1, %dx
+    out %al, %dx
+    jmp .putsloop
+.putsdone:
+
+    pop %rbp
+    pop %rbx
+    pop %r15
+    pop %r14
+    pop %r13
+    pop %r12
+
 /* vim: ft=gas :
 */

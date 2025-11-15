@@ -30,7 +30,7 @@
     .text
     .globl _start
     .extern uart_init
-    .extern uart_write
+    .extern uart_puts
     .extern idt_load
     .extern gdt_load
     .extern GDTR
@@ -46,8 +46,7 @@ _start:
     call idt_load           /* Load our IDT */
 
     lea bootmsg(%rip), %rdi
-    movq bootmsg_len, %rsi
-    call uart_write
+    call uart_puts
 
     call kmain              /* Call our kernel entrypoint */
 1:  cli
@@ -60,7 +59,6 @@ bootmsg:
     .ascii "[ 00:00 delta @ crev : 89 seconds]\n"
     .ascii "** booting rv7 ...\n"
     .byte 0x00
-bootmsg_len:    .quad . - bootmsg
 
 /* vim: ft=gas :
 */
