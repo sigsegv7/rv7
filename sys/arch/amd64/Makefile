@@ -14,7 +14,7 @@ all: $(ASMOBJS)
 
 %.S.o: %.S
 	$(PROMPT) " [AS] " $<
-	$(CC) -c $(SYS_CFLAGS) $< -o $@
+	$(CC) -c -I../../target/inc/ $(SYS_CFLAGS) $< -o $@
 
 .PHONY: clean
 clean:

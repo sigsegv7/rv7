@@ -27,6 +27,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <md/kfence.h>
+
 #define KERNEL_CS 0x08
 
 #define INT_GATE 0x8E
@@ -152,127 +154,155 @@ set_traps:
     retq
 
 diverr:
+    KFENCE
     push_frame 0x0
     mov %rsp, %rdi
     call trap_dispatch
     pop_frame  0x0
+    KFENCE
 1:  cli
     hlt
     jmp 1b
 
 debug_except:
+    KFENCE
     push_frame 0x1
     mov %rsp, %rdi
     call trap_dispatch
     pop_frame  0x1
+    KFENCE
 1:  cli
     hlt
     jmp 1b
 
 nmi:
+    KFENCE
     push_frame 0x2
     mov %rsp, %rdi
     call trap_dispatch
     pop_frame  0x2
+    KFENCE
 1:  cli
     hlt
     jmp 1b
 
 breakpoint:
+    KFENCE
     push_frame 0x3
     mov %rsp, %rdi
     call trap_dispatch
     pop_frame  0x3
+    KFENCE
 1:  cli
     hlt
     jmp 1b
 
 overflow:
+    KFENCE
     push_frame 0x4
     mov %rsp, %rdi
     call trap_dispatch
     pop_frame  0x4
+    KFENCE
 1:  cli
     hlt
     jmp 1b
 
 bound_range:
+    KFENCE
     push_frame 0x5
     mov %rsp, %rdi
     call trap_dispatch
     pop_frame  0x5
+    KFENCE
 1:  cli
     hlt
     jmp 1b
 
 invl_opc:
+    KFENCE
     push_frame 0x6
     mov %rsp, %rdi
     call trap_dispatch
     pop_frame  0x6
+    KFENCE
 1:  cli
     hlt
     jmp 1b
 
 no_coproc:
+    KFENCE
     push_frame 0x7
     mov %rsp, %rdi
     call trap_dispatch
     pop_frame  0x7
+    KFENCE
 1:  cli
     hlt
     jmp 1b
 
 double_fault:
+    KFENCE_EC
     push_frame 0x8
     mov %rsp, %rdi
     call trap_dispatch
     pop_frame  0x8
+    KFENCE_EC
 1:  cli
     hlt
     jmp 1b
 
 invalid_tss:
+    KFENCE_EC
     push_frame 0xA
     mov %rsp, %rdi
     call trap_dispatch
     pop_frame  0xA
+    KFENCE_EC
 1:  cli
     hlt
     jmp 1b
 
 seg_np:
+    KFENCE_EC
     push_frame 0xB
     mov %rsp, %rdi
     call trap_dispatch
     pop_frame  0xB
+    KFENCE_EC
 1:  cli
     hlt
     jmp 1b
 
 ss_fault:
+    KFENCE_EC
     push_frame 0xC
     mov %rsp, %rdi
     call trap_dispatch
     pop_frame  0xC
+    KFENCE_EC
 1:  cli
     hlt
     jmp 1b
 
 gpf:
+    KFENCE_EC
     push_frame 0xD
     mov %rsp, %rdi
     call trap_dispatch
     pop_frame  0xD
+    KFENCE_EC
 1:  cli
     hlt
     jmp 1b
 
 page_fault:
+    KFENCE_EC
     push_frame 0xE
     mov %rsp, %rdi
     call trap_dispatch
     pop_frame  0xE
+    KFENCE_EC
 1:  cli
     hlt
     jmp 1b
