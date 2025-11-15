@@ -40,3 +40,6 @@ pio_inl:
     xor %rax, %rax
     inl %dx, %eax
     retq
+
+/* vim: ft=gas :
+*/
