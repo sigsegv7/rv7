@@ -26,24 +26,56 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  */
+    .text
+    .globl gdt_load
+gdt_load:
+    /*
+     * void gdt_load(GDTR *GDTR);
+     */
 
-    .globl _start
-    .extern uart_init
-    .extern gdt_load
-    .extern GDTR
-_start:
-    cli
-    cld
+    push %r12
+    push %r13
+    push %r14
+    push %r15
+    push %rbx
+    push %rbp
 
-    xor %rbp, %rbp          /* Terminate callstack */
-    call uart_init          /* Initialize platform UART */
+    lgdt (%rdi)             /* Load our own GDT */
+    lea 1f(%rip), %rbx      /* Save the drop point */
+    push $0x08              /* FRAME.CS */
+    push %rbx               /* FRAME.RIP */
+    lretq                   /* Flush prefetch and update CS */
+1:  mov $0x10, %ax          /* Our DS */
+    mov %ax, %ds            /* Data segment */
+    mov %ax, %fs            /* F segment */
+    mov %ax, %ss            /* Stack segment */
+    mov %ax, %es            /* Extra segment */
+    xor %ax, %ax            /* We want GS in a known state */
+    mov %ax, %gs            /* Load it with NULL */
 
-    lea GDTR(%rip), %rdi    /* Our GDTR */
-    call gdt_load           /* Load our GDT */
+    pop %rbp
+    pop %rbx
+    pop %r15
+    pop %r14
+    pop %r13
+    pop %r12
+    retq
 
-1:  cli
-    hlt
-    jmp 1b
+    .section .data
+    .globl GDT
+GDT:
+.NULL:
+    .quad 0x0000000000000000
+.CODE:
+    .quad 0x00209A0000000000
+.DATA:
+    .quad 0x0000920000000000
+
+    .globl GDTR
+GDTR:
+    .word . - GDT - 1
+    .quad GDT
+
 
 /* vim: ft=gas :
 */
