@@ -4,11 +4,15 @@ SYS_CFLAGS =
 ARCH =
 
 .PHONY: all
-all: arch
+all: kern arch
 
 .PHONY: arch
 arch:
 	cd arch/$(ARCH); make CC=$(CC) LD=$(LD) SYS_CFLAGS="$(SYS_CFLAGS)"
+
+.PHONY: kern
+kern:
+	cd kern/; make CC=$(CC) LD=$(LD) SYS_CFLAGS="$(SYS_CFLAGS)"
 
 .PHONY: clean
 clean:

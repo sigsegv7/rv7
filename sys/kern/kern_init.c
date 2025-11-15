@@ -27,40 +27,12 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-    .text
-    .globl _start
-    .extern uart_init
-    .extern uart_write
-    .extern idt_load
-    .extern gdt_load
-    .extern GDTR
-_start:
-    cli
-    cld
+#include <sys/types.h>
 
-    xor %rbp, %rbp          /* Terminate callstack */
-    call uart_init          /* Initialize platform UART */
+void kmain(void);
 
-    lea GDTR(%rip), %rdi    /* Our GDTR */
-    call gdt_load           /* Load our GDT */
-    call idt_load           /* Load our IDT */
-
-    lea bootmsg(%rip), %rdi
-    movq bootmsg_len, %rsi
-    call uart_write
-
-    call kmain              /* Call our kernel entrypoint */
-1:  cli
-    hlt
-    jmp 1b
-
-    .section .rodata
-bootmsg:
-    .ascii "[ preparing since 2025 ]\n"
-    .ascii "[ 00:00 delta @ crev : 89 seconds]\n"
-    .ascii "** booting rv7 ...\n"
-    .byte 0x00
-bootmsg_len:    .quad . - bootmsg
-
-/* vim: ft=gas :
-*/
+void
+kmain(void)
+{
+    (void)0;
+}
