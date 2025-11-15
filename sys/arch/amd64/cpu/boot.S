@@ -27,6 +27,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+    .text
     .globl _start
     .extern uart_init
     .extern uart_write
