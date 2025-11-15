@@ -1,0 +1,42 @@
+CC = @CC@
+LD = @LD@
+ARCH = @ARCH@
+ISO = rv7.iso
+SYS_CFLAGS = @SYS_CFLAGS@
+SYSROOT = root
+
+.PHONY: all
+all: $(SYSROOT) sys iso
+
+.PHONY: sys
+sys:
+	cd sys/; make CC=$(CC) SYS_CFLAGS="$(SYS_CFLAGS)" ARCH=$(ARCH) LD=$(LD)
+
+.PHONY: iso
+iso:
+	mkdir -p iso_root/boot/
+	cp data/boot/wallpaper.jpg iso_root/boot/
+	cp data/boot/limine.conf boot/limine/limine-bios.sys \
+        boot/limine/limine-bios-cd.bin boot/limine/limine-uefi-cd.bin iso_root/
+	cp sys/rv7 iso_root/boot/
+	xorriso -as mkisofs -b limine-bios-cd.bin -no-emul-boot -boot-load-size 4\
+		-boot-info-table --efi-boot limine-uefi-cd.bin -efi-boot-part \
+		--efi-boot-image --protective-msdos-label iso_root/ -o $(ISO) 1>/dev/null
+	boot/limine/limine bios-install $(ISO) 1>/dev/null
+	rm -rf iso_root
+
+$(SYSROOT):
+	mkdir -p $(SYSROOT)/
+	mkdir -p $(SYSROOT)/boot/
+	mkdir -p $(SYSROOT)/boot/np/
+	mkdir -p $(SYSROOT)/usr/include/
+	mkdir -p $(SYSROOT)/usr/bin/
+	mkdir -p $(SYSROOT)/usr/sbin/
+
+.PHONY: run
+run:
+	qemu-system-x86_64 -cdrom rv7.iso --enable-kvm -cpu host -m 2G
+
+.PHONY: clean
+clean:
+	cd sys/; make clean ARCH=$(ARCH)

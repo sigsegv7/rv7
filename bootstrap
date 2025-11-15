@@ -1,0 +1,14 @@
+#!/bin/sh
+
+if [[ ! -d cc/toolchain ]]
+then
+    git clone https://github.com/sigsegv7/osmora-toolchain cc/toolchain
+fi
+
+if [[ ! -d boot ]]
+then
+    git clone https://github.com/limine-bootloader/limine.git --branch=v9.3.0-binary --depth=1 boot/limine
+    make -C boot/limine
+fi
+
+autoconf
