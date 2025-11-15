@@ -30,6 +30,7 @@
     .globl _start
     .extern uart_init
     .extern uart_write
+    .extern idt_load
     .extern gdt_load
     .extern GDTR
 _start:
@@ -41,6 +42,7 @@ _start:
 
     lea GDTR(%rip), %rdi    /* Our GDTR */
     call gdt_load           /* Load our GDT */
+    call idt_load           /* Load our IDT */
 
     lea bootmsg(%rip), %rdi
     movq bootmsg_len, %rsi
