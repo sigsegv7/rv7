@@ -3,6 +3,7 @@
 /configure
 /boot
 /cc
+/sys/rv7
 *.sys
 *.log
 *.status
