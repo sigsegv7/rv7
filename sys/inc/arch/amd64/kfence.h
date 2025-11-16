@@ -41,6 +41,10 @@
         swapgs                    ; \
     1:
 
+/*
+ * Kernel entry/exit handling for interrupts containing
+ * no error codes
+ */
 #define KFENCE                    ; \
         testq $0x3, 8(%rsp)       ; \
         jz 1f                     ; \
