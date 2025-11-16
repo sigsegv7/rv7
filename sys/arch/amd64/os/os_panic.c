@@ -31,25 +31,6 @@
 #include <mu/panic.h>
 
 void
-mu_panic_preamble(void)
-{
-    static uint64_t sync = 0;
-
-    asm volatile(
-        "cli\n\t"
-        "mov $1, %%rax\n\t"
-        "1:\n\t"
-        "   pause\n\t"
-        "   xchg %0, %%rax\n\t"
-        "   or %%rax, %%rax\n\t"
-        "   jnz 1b\n"
-        :
-        : "m" (sync)
-        : "memory"
-    );
-}
-
-void
 mu_panic_hcf(void)
 {
     for (;;) {

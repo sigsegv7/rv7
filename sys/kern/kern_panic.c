@@ -30,9 +30,12 @@
 #include <kern/panic.h>
 #include <kern/serial.h>
 #include <mu/panic.h>
+#include <mu/spinlock.h>
 #include <lib/string.h>
 #include <lib/stdarg.h>
 #include <lib/stdbool.h>
+
+static volatile size_t __sync = 0;
 
 void
 panic(const char *fmt, ...)
@@ -41,7 +44,7 @@ panic(const char *fmt, ...)
     static char buf[256];
     static va_list ap;
 
-    mu_panic_preamble();
+    mu_spinlock_acq(&__sync, SPINLOCK_INTTOG);
     va_start(ap, fmt);
 
     vsnprintf(buf, sizeof(buf), fmt, ap);

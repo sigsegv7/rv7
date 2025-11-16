@@ -33,12 +33,6 @@
 #include <sys/types.h>
 
 /*
- * Called as soon as a panic is invoked, prevents other
- * processors from continuing and disables interrupts
- */
-void mu_panic_preamble(void);
-
-/*
  * Used internally by the panic function and implemented
  * per architecture to bring the system to a halt.
  */
