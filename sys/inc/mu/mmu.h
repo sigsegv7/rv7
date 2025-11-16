@@ -38,17 +38,17 @@
  * Read the currently in-use virtual address space
  * structure
  */
-__weak int mu_pmap_readvas(struct mmu_vas *vas);
+__strong int mu_pmap_readvas(struct mmu_vas *vas);
 
 /*
  * Write a new virtual address structure to be put
  * into use as the current address space
  */
-__weak int mu_pmap_writevas(struct mmu_vas *vas);
+__strong int mu_pmap_writevas(struct mmu_vas *vas);
 
 /*
  * Initialize the platform memory management unit
  */
-__weak void mu_pmap_init(void);
+__strong void mu_pmap_init(void);
 
 #endif  /* !_MU_PMAP_H_ */

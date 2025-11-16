@@ -30,19 +30,19 @@
 #include <sys/cdefs.h>
 #include <mu/mmu.h>
 
-__strong void
+__weak void
 mu_pmap_init(void)
 {
     (void)0;
 }
 
-__strong int
+__weak int
 mu_pmap_readvas(struct mmu_vas *vas)
 {
     (void)vas;
 }
 
-__strong int
+__weak int
 mu_pmap_writevas(struct mmu_vas *vas)
 {
     (void)vas;
