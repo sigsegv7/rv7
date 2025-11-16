@@ -32,6 +32,21 @@
 
 #include <sys/types.h>
 
+/*
+ * Initialize the physical memory manager
+ */
 void vm_phys_init(void);
+
+/*
+ * Allocate a number of contigious physical memory
+ * frames
+ */
+uintptr_t vm_phys_alloc(size_t count);
+
+/*
+ * Free a contigious region of physical memory
+ * frames
+ */
+void vm_phys_free(uintptr_t base, size_t count);
 
 #endif  /* !_VM_PHYS_H_ */

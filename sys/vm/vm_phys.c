@@ -31,6 +31,7 @@
 #include <sys/cdefs.h>
 #include <sys/param.h>
 #include <kern/panic.h>
+#include <mu/spinlock.h>
 #include <os/trace.h>
 #include <vm/phys.h>
 #include <vm/vm.h>
@@ -59,7 +60,9 @@
 typedef struct limine_memmap_entry mementry_t;
 
 /* Bitmap */
+static volatile size_t bitmap_lock = 0;
 static uint8_t *bitmap = NULL;
+static size_t last_index = 0;
 
 /* Memory statistics */
 static size_t total_mem = 0;
@@ -208,6 +211,69 @@ vm_probe(void)
     bitmap_size /= 8;
     dtrace("framedb len : %d bytes\n", bitmap_size);
     vm_alloc_bitmap();
+}
+
+/*
+ * Lockless frame allocation routine
+ */
+static uintptr_t
+__vm_phys_alloc(size_t count)
+{
+    size_t frames_found = 0;
+    size_t max_index;
+    ssize_t index_start = -1;
+    uintptr_t start, end;
+
+    max_index = highest_usable / PAGESIZE;
+    for (size_t i = last_index; i < max_index; ++i) {
+        if (!testbit(bitmap, i)) {
+            if (index_start < 0)
+                index_start = i;
+            if ((++frames_found) >= count)
+                break;
+
+            continue;
+        }
+
+        index_start = -1;
+    }
+
+    if (index_start < 0) {
+        return 0;
+    }
+
+    start = index_start * PAGESIZE;
+    end = start + (count * PAGESIZE);
+    bitmap_set_range(start, end, true);
+    return start;
+}
+
+void
+vm_phys_free(uintptr_t base, size_t count)
+{
+    uintptr_t end;
+
+    base = ALIGN_DOWN(base, PAGESIZE);
+    end = base + (count * PAGESIZE);
+
+    mu_spinlock_acq(&bitmap_lock, 0);
+    bitmap_set_range(base, end, false);
+    mu_spinlock_rel(&bitmap_lock, 0);
+}
+
+uintptr_t
+vm_phys_alloc(size_t count)
+{
+    uintptr_t base;
+
+    mu_spinlock_acq(&bitmap_lock, 0);
+    base = __vm_phys_alloc(count);
+    if (base == 0) {
+        last_index = 0;
+        base = __vm_phys_alloc(count);
+    }
+    mu_spinlock_rel(&bitmap_lock, 0);
+    return base;
 }
 
 void
