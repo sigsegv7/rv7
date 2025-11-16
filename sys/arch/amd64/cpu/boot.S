@@ -45,6 +45,15 @@ _start:
     call gdt_load           /* Load our GDT */
     call idt_load           /* Load our IDT */
 
+    /*
+     * RV7 will default to APIC operation, as per a section
+     * somewhere around 5.2.12 of the ACPI spec, we'll need
+     * to disable the PC-AT dual 8259 chips.
+     */
+    mov $0xFF, %al          /* Mask all inputs */
+    out %al, $0x21          /* Disable the master PIC */
+    out %al, $0xA1          /* Disable the slave PIC */
+
     lea bootmsg(%rip), %rdi
     call uart_puts
 
