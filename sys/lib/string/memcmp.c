@@ -27,34 +27,19 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _LIB_STRING_H_
-#define _LIB_STRING_H_ 1
+#include <lib/string.h>
 
-#include <sys/types.h>
-#include <lib/stdarg.h>
+int
+memcmp(const void *s1, const void *s2, size_t n)
+{
+	if (n != 0) {
+        const unsigned char *p1 = s1, *p2 = s2;
 
-/* POSIX memset() */
-void *memset(void *dest, int c, size_t len);
-
-/* POSIX memcpy() */
-void *memcpy(void *dest, const void *src, size_t len);
-
-/* POSIX strlen() */
-size_t strlen(const char *s);
-
-/* POSIX strcmp() */
-int strcmp(const char *s1, const char *s2);
-
-/* POSIX vsnprintf() */
-int vsnprintf(char *s, size_t size, const char *fmt, va_list ap);
-
-/* POSIX snprintf() */
-int snprintf(char *s, size_t size, const char *fmt, ...);
-
-/* POSIX memcmp() */
-int memcmp(const void *s1, const void *s2, size_t n);
-
-/* Convert base int to string */
-char *itoa(int64_t value, char *buf, int base);
-
-#endif  /* !_LIB_STRING_H_ */
+		do {
+			if (*p1++ != *p2++) {
+				return (*--p1 - *--p2);
+            }
+		} while (--n != 0);
+    }
+	return 0;
+}
