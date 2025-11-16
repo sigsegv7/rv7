@@ -27,16 +27,45 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+#ifndef _CONS_CONS_H_
+#define _CONS_CONS_H_ 1
+
 #include <sys/types.h>
-#include <dev/cons/cons.h>
-#include <os/trace.h>
+#include <dev/video/vram.h>
 
-struct console g_bootcons;
-void kmain(void);
+/*
+ * Represents a system console, these fields are mostly
+ * internal and should not be written to directly.
+ *
+ * @vram: VRAM descriptor in-use
+ * @fg: Foreground color in-use
+ * @bg: Background color in-use
+ * @tx: Text X position
+ * @ty: Text Y position
+ * @active: Set if active
+ */
+struct console {
+    struct vram_dev vram;
+    uint32_t fg;
+    uint32_t bg;
+    size_t tx;
+    size_t ty;
+    uint8_t active : 1;
+};
 
-void
-kmain(void)
-{
-    console_reset(&g_bootcons);
-    trace("bootcons: console online\n");
-}
+/*
+ * Reset a console into a known state, typically used
+ * for initialization.
+ *
+ * Returns zero on success.
+ */
+int console_reset(struct console *cons);
+
+/*
+ * Write a stream of bytes to the console.
+ *
+ * Returns zero on success.
+ */
+int console_write(struct console *cons, const char *s, size_t len);
+
+#endif  /* !_CONS_CONS_H_ */

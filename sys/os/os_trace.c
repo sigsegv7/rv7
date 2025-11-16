@@ -27,15 +27,29 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <sys/types.h>
 #include <os/trace.h>
+#include <dev/cons/cons.h>
 #include <kern/serial.h>
 #include <lib/stdarg.h>
 #include <lib/string.h>
 
+extern struct console g_bootcons;
+
 static void
 trace_write(const char *s)
 {
-    serial_write(s, strlen(s));
+    size_t len;
+
+    if (s == NULL) {
+        return;
+    }
+
+    len = strlen(s);
+    serial_write(s, len);
+    if (g_bootcons.active) {
+        console_write(&g_bootcons, s, len);
+    }
 }
 
 void
