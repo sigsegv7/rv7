@@ -64,22 +64,17 @@ trapstr_tab:
 
     .text
     .globl trap_dispatch
-    .extern uart_write
+    .extern panic
 trap_dispatch:
     mov 0(%rdi), %rax               /* Vector */
-    push %rax                       /* Save it */
     cmp $TRAPSTR_ENTRIES, %rax      /* Too big? */
     jg .unknown_trap                /* Yeah... */
 
-    lea error_header(%rip), %rdi    /* Load the error header */
-    call uart_puts                  /* Print it */
-
-    pop %rcx                        /* Get the vector number */
+    mov %rax, %rcx                  /* Vector -> RCX */
     lea trapstr_convtab(%rip), %rdi /* Load the base here */
     leaq (%rdi, %rcx, 8), %rdi      /* Scale by the vector */
     mov (%rdi), %rdi                /* Get the error string address */
-
-    call uart_puts
+    call panic
     retq
 .unknown_trap:
     lea error_unknown(%rip), %rdi
