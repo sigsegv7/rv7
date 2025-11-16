@@ -29,10 +29,14 @@
 
 #include <sys/types.h>
 #include <sys/cdefs.h>
+#include <sys/param.h>
 #include <kern/panic.h>
 #include <os/trace.h>
 #include <vm/phys.h>
+#include <vm/vm.h>
 #include <lib/limine.h>
+#include <lib/string.h>
+#include <lib/stdbool.h>
 
 #define dtrace(fmt, ...) trace("phys: " fmt, ##__VA_ARGS__)
 
@@ -54,10 +58,14 @@
 
 typedef struct limine_memmap_entry mementry_t;
 
+/* Bitmap */
+static uint8_t *bitmap = NULL;
+
 /* Memory statistics */
 static size_t total_mem = 0;
 static size_t free_mem = 0;
 static size_t reserved_mem = 0;
+static size_t bitmap_size = 0;
 static uintptr_t highest_usable = 0;
 
 /*
@@ -80,6 +88,88 @@ vm_printstat(const char *name, size_t size)
     } else {
         dtrace("%s %d MiB\n", name, size / MEM_MIB);
     }
+}
+
+/*
+ * Set a range in a bitmap as allocated or free
+ */
+static void
+bitmap_set_range(uintptr_t start, uintptr_t end, bool alloc)
+{
+    /* Clamp the range */
+    start = ALIGN_DOWN(start, PAGESIZE);
+    end = ALIGN_UP(end, PAGESIZE);
+
+    for (uintptr_t p = start; p < end; p += PAGESIZE) {
+        if (alloc) {
+            setbit(bitmap, p / PAGESIZE);
+        } else {
+            clrbit(bitmap, p / PAGESIZE);
+        }
+    }
+}
+
+/*
+ * Populate bitmap entries based on what is free and
+ * what is not
+ */
+static void
+vm_fill_bitmap(void)
+{
+    uintptr_t start, end;
+    size_t entries_set = 0;
+    mementry_t *entry;
+
+    for (size_t i = 0; i < MEM_ENTRY_COUNT; ++i) {
+        entry = MEM_ENTRY(i);
+
+        /* Drop unusable entries */
+        if (entry->type != MEM_USABLE) {
+            continue;
+        }
+
+        start = entry->base;
+        end = entry->base + entry->length;
+        bitmap_set_range(start, end, false);
+        ++entries_set;
+    }
+
+    dtrace("populated %d entries\n", entries_set);
+}
+
+/*
+ * Find a physical memory hole big enough to fit the
+ * bitmap
+ */
+static void
+vm_alloc_bitmap(void)
+{
+    mementry_t *entry;
+
+    for (size_t i = 0; i < MEM_ENTRY_COUNT; ++i) {
+        entry = MEM_ENTRY(i);
+
+        /* Drop unusable entries */
+        if (entry->type != MEM_USABLE) {
+            continue;
+        }
+
+        /* Does the bitmap fit here? */
+        if (entry->length >= bitmap_size) {
+            bitmap = PHYS_TO_VIRT(entry->base);
+            entry->length -= bitmap_size;
+            entry->base += bitmap_size;
+            break;
+        }
+    }
+
+    if (__unlikely(bitmap == NULL)) {
+        panic("vm: unable to allocate framedb\n");
+    }
+
+    /* Populate the bitmap */
+    memset(bitmap, 0xFF, bitmap_size);
+    vm_fill_bitmap();
 }
 
 /*
@@ -107,10 +197,17 @@ vm_probe(void)
         }
     }
 
+    /* Print some stats */
     vm_printstat("memory installed", total_mem);
     vm_printstat("memory usable", free_mem);
     vm_printstat("memory reserved", reserved_mem);
     dtrace("usable top @ %p\n", highest_usable);
+
+    /* Compute the bitmap size */
+    bitmap_size = highest_usable / PAGESIZE;
+    bitmap_size /= 8;
+    dtrace("framedb len : %d bytes\n", bitmap_size);
+    vm_alloc_bitmap();
 }
 
 void
