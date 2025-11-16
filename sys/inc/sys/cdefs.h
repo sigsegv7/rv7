@@ -30,6 +30,7 @@
 #ifndef _SYS_CDEFS_H_
 #define _SYS_CDEFS_H_ 1
 
+#define __asmv          __asm__ __volatile__
 #define __weak          __attribute__((__weak__))
 #define __strong        __attribute__((__strong__))
 #define __always_inline __attribute__((__always_inline__))
