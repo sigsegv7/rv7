@@ -31,6 +31,7 @@
 #include <dev/cons/cons.h>
 #include <os/trace.h>
 #include <vm/phys.h>
+#include <vm/vm.h>
 
 struct console g_bootcons;
 void kmain(void);
@@ -41,4 +42,5 @@ kmain(void)
     console_reset(&g_bootcons);
     trace("bootcons: console online\n");
     vm_phys_init();
+    vm_init();
 }

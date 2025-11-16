@@ -27,23 +27,17 @@
  * PKERNSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _VM_VM_H_
-#define _VM_VM_H_ 1
-
 #include <sys/types.h>
-#include <sys/param.h>
-#include <lib/limine.h>
+#include <os/trace.h>
+#include <vm/vm.h>
+#include <mu/mmu.h>
 
-extern volatile struct limine_hhdm_request hhdm_req;
+#define dtrace(fmt, ...) trace("vm: " fmt, ##__VA_ARGS__)
 
-#define PAGESIZE  0x1000
-#define PHYS_TO_VIRT(PHYS) PTR_OFFSET(PHYS, hhdm_req.response->offset)
-#define VIRT_TO_PHYS(VIRT) (uintptr_t)PTR_NOFFET(VIRT, hhdm_req.response->offset)
-
-/*
- * Initialize the virtual memory management
- * subsystem
- */
-void vm_init(void);
-
-#endif  /* !_VM_VM_H_ */
+void
+vm_init(void)
+{
+    dtrace("bringing up mmu...\n");
+    mu_pmap_init();
+    dtrace("OK\n");
+}

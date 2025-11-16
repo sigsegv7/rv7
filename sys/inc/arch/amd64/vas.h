@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025 Ian Marco Moffett and the Osmora Team.
+ * Copyright (c) 2023-2025 Ian Marco Moffett and the Osmora Team.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -16,34 +16,24 @@
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPKERNE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
  * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
  * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
  * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
- * SUBSTITUTE GOODS OR SERVICES; LKERNS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
  * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
  * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
- * PKERNSIBILITY OF SUCH DAMAGE.
+ * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _VM_VM_H_
-#define _VM_VM_H_ 1
+#ifndef _MACHINE_VAS_H_
+#define _MACHINE_VAS_H_ 1
 
 #include <sys/types.h>
-#include <sys/param.h>
-#include <lib/limine.h>
 
-extern volatile struct limine_hhdm_request hhdm_req;
+struct mmu_vas {
+    uintptr_t cr3;
+};
 
-#define PAGESIZE  0x1000
-#define PHYS_TO_VIRT(PHYS) PTR_OFFSET(PHYS, hhdm_req.response->offset)
-#define VIRT_TO_PHYS(VIRT) (uintptr_t)PTR_NOFFET(VIRT, hhdm_req.response->offset)
-
-/*
- * Initialize the virtual memory management
- * subsystem
- */
-void vm_init(void);
-
-#endif  /* !_VM_VM_H_ */
+#endif  /* !_MACHINE_VAS_H_ */
