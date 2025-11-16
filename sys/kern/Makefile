@@ -7,6 +7,7 @@ CFILES += $(shell find ../os -name "*.c")
 CFILES += $(shell find ../vm -name "*.c")
 CFILES += $(shell find ../dev -name "*.c")
 CFILES += $(shell find ../mu -name "*.c")
+CFILES += $(shell find ../acpi -name "*.c")
 OFILES = $(CFILES:.c=.o)
 DFILES = $(CFILES:.c=.d)
 CC =

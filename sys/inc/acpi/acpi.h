@@ -27,22 +27,19 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+#ifndef _ACPI_ACPI_H_
+#define _ACPI_ACPI_H_ 1
+
 #include <sys/types.h>
-#include <dev/cons/cons.h>
-#include <os/trace.h>
-#include <acpi/acpi.h>
-#include <vm/phys.h>
-#include <vm/vm.h>
 
-struct console g_bootcons;
-void kmain(void);
+/*
+ * Initialize the ACPI subsystem
+ */
+void acpi_init(void);
 
-void
-kmain(void)
-{
-    console_reset(&g_bootcons);
-    trace("bootcons: console online\n");
-    vm_phys_init();
-    vm_init();
-    acpi_init();
-}
+/*
+ * Query an ACPI table using its signature
+ */
+void *acpi_query(const char *s);
+
+#endif  /* !_ACPI_ACPI_H_ */
