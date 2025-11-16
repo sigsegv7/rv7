@@ -125,6 +125,7 @@ uart_puts:
     pop %r14
     pop %r13
     pop %r12
+    retq
 
 /* vim: ft=gas :
 */
