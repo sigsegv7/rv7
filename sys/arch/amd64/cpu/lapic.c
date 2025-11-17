@@ -224,7 +224,7 @@ lapic_tmr_clbr(struct mcb *mcb)
 
 /*
  * Used to serialize inter-processor interrupts when
- * operating in x2APIC mode
+ * operating in xAPIC mode
  */
 static void
 lapic_ipi_poll(struct mcb *mcb)
