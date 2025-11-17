@@ -29,6 +29,7 @@
 
 #include <sys/cdefs.h>
 #include <sys/param.h>
+#include <sys/errno.h>
 #include <sys/types.h>
 #include <acpi/acpi.h>
 #include <acpi/tables.h>
@@ -60,6 +61,8 @@
 #define LAPIC_REG_TCCR      0x0390       /* Timer current counter register */
 #define LAPIC_REG_TDCR      0x03E0       /* Timer divide configuration register */
 #define LAPIC_REG_LVTTMR    0x0320       /* LVT timer entry */
+#define LAPIC_REG_ICRLO     0x0300U      /* Interrupt Command Low Register */
+#define LAPIC_REG_ICRHI     0x0310U      /* Interrupt Command High Register */
 
 /* LAPIC SVR bits */
 #define LAPIC_SVR_EBS       BIT(12)     /* EOI-broadcast supression */
@@ -217,6 +220,86 @@ lapic_tmr_clbr(struct mcb *mcb)
     /* Compute the frequency */
     freq = (LAPIC_TMR_SAMPLES / ticks_total) * I8254_DIVIDEND;
     return freq;
+}
+
+/*
+ * Used to serialize inter-processor interrupts when
+ * operating in x2APIC mode
+ */
+static void
+lapic_ipi_poll(struct mcb *mcb)
+{
+    uint32_t icr_lo;
+
+    do {
+        icr_lo = lapic_read(mcb, LAPIC_REG_ICRLO);
+        __asmv("pause");
+    } while (ISSET(icr_lo, BIT(12)));
+}
+
+int
+lapic_send_ipi(struct mcb *mcb, struct lapic_ipi *ipi)
+{
+    const uint16_t X2APIC_SELF = 0x083F;
+    uint32_t icr_lo, icr_hi;
+
+    if (ipi == NULL) {
+        return -EINVAL;
+    }
+
+    /*
+     * Section 2.4.5 of the x2APIC spec states that x2APICs
+     * have a special self IPI register that can be used
+     * instead of just sending out an interrupt on the system
+     * bus (or APIC bus) and having it loop all the way back.
+     * This interface is an optimized shorthand path
+     */
+    if (ipi->shorthand == IPI_SHAND_SELF && mcb->has_x2apic) {
+        wrmsr(X2APIC_SELF, ipi->vector);
+        return 0;
+    }
+
+    /* Clamp to 8 bits if xAPIC */
+    if (!mcb->has_x2apic) {
+        ipi->dest_id &= 0xFF;
+    }
+
+    /* Encode the ICR high bits */
+    if (!mcb->has_x2apic) {
+        icr_hi = lapic_read(mcb, LAPIC_REG_ICRHI);
+        icr_hi &= ~(0xFFUL << 56);
+        icr_hi |= (ipi->dest_id << 56);
+        lapic_write(mcb, LAPIC_REG_ICRHI, icr_hi);
+    } else {
+        icr_lo = lapic_read(mcb, LAPIC_REG_ICRLO);
+        icr_lo &= ~0xFFFFFFFF;
+        icr_lo |= ipi->dest_id;
+    }
+
+    /*
+     * Encode the low bits of the ICR. If we are x2APIC,
+     * there is no need to read the low DWORD again as
+     * reads load the entire register.
+     */
+    if (!mcb->has_x2apic) {
+        icr_lo = lapic_read(mcb, LAPIC_REG_ICRLO);
+    }
+    icr_lo |= ipi->vector;
+    icr_lo |= (ipi->delmod << 8);
+    icr_lo |= (ipi->logical_dest << 11);
+    icr_lo |= (ipi->shorthand << 18);
+    lapic_write(mcb, LAPIC_REG_ICRLO, icr_lo);
+
+    /* Poll if in x2APIC mode */
+    if (!mcb->has_x2apic) {
+        lapic_ipi_poll(mcb);
+    }
+
+    /*
+     * The x2APIC queues IPIs up and thus polling is not needed as
+     * the delivery status bit is not used nor is it present.
+     */
+    return 0;
 }
 
 /*

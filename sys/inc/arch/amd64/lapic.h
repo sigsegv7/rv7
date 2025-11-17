@@ -30,7 +30,72 @@
 #ifndef _MACHINE_LAPIC_H_
 #define _MACHINE_LAPIC_H_ 1
 
+#include <sys/types.h>
+#include <mu/cpu.h>
+
 #define LAPIC_TMR_VEC 0x81
+
+/*
+ * Represents possible values of the destination shorthand
+ * field for inter-processor interrupts
+ *
+ * @IPI_SHAND_NONE: No shorthand
+ * @IPI_SHAND_SELF: Address self
+ * @IPI_SHAND_AIS:  All including self
+ * @IPIS_HAND_AXS:  All excluding self
+ */
+typedef enum {
+    IPI_SHAND_NONE,
+    IPI_SHAND_SELF,
+    IPI_SHAND_AIS,
+    IPI_SHAND_AXS
+} ipi_shand_t;
+
+/*
+ * Represents possible values of the delivery mode
+ * field for inter-processor interrupts
+ *
+ * @IPI_DELMOD_FIXED:       Deliver vector to processor target(s)
+ * @IPI_DELMOD_LOPRI:       Lowest priority [SDM advises against its use]
+ * @IPI_DELMOD_SMI:         Reserved
+ * @IPI_DELMOD_RESERVED:    Reserved
+ * @IPI_DELMOD_NMI:         Deliver a non-maskable interrupt [vector unused]
+ * @IPI_DELMOD_INIT:        Park a processor to the reset vector
+ * @IPI_DELMOD_STARTUP:     Bring a processor up into real mode
+ */
+typedef enum {
+    IPI_DELMOD_FIXED,
+    IPI_DELMOD_LOPRI,
+    IPI_DELMOD_SMI,
+    IPI_DELMOD_RESERVED,
+    IPI_DELMOD_NMI,
+    IPI_DELMOD_INIT,
+    IPI_DELMOD_STARTUP
+} ipi_delmod_t;
+
+/*
+ * Represents an inter-processor interrupt descriptor
+ *
+ * @dest_id: APIC ID of destination processor
+ * @vector: Interrupt vector to send
+ * @delmod: Delivery mode
+ * @shorthand: Destination shorthand
+ * @logical_dest: Set if destination mode should be logical
+ */
+struct lapic_ipi {
+    uint64_t dest_id;
+    uint8_t vector;
+    ipi_delmod_t delmod : 3;
+    ipi_shand_t shorthand : 2;
+    uint8_t logical_dest : 1;
+};
+
+/*
+ * Send an interprocessor interrupt
+ *
+ * Returns zero on success
+ */
+int lapic_send_ipi(struct mcb *mcb, struct lapic_ipi *ipi);
 
 /*
  * Initialize the Local APIC on-board the
