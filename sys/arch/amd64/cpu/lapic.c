@@ -241,7 +241,7 @@ int
 lapic_send_ipi(struct mcb *mcb, struct lapic_ipi *ipi)
 {
     const uint16_t X2APIC_SELF = 0x083F;
-    uint32_t icr_lo, icr_hi;
+    uint64_t icr_lo, icr_hi;
 
     if (ipi == NULL) {
         return -EINVAL;
@@ -272,8 +272,8 @@ lapic_send_ipi(struct mcb *mcb, struct lapic_ipi *ipi)
         lapic_write(mcb, LAPIC_REG_ICRHI, icr_hi);
     } else {
         icr_lo = lapic_read(mcb, LAPIC_REG_ICRLO);
-        icr_lo &= ~0xFFFFFFFF;
-        icr_lo |= ipi->dest_id;
+        icr_lo &= ~0xFFFFFFFFFFFFFFFF;
+        icr_lo |= (ipi->dest_id << 32);
     }
 
     /*
