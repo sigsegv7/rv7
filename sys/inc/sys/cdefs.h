@@ -44,6 +44,7 @@
 #define __nothing       ((void)0)
 #define __likely(exp)   __builtin_expect(((exp) != 0), 1)
 #define __unlikely(exp) __builtin_expect(((exp) != 0), 0)
+#define __barrier()     __asmv("" ::: "memory")
 #define __static_assert _Static_assert
 
 #endif  /* !_SYS_CDEFS_H_ */
