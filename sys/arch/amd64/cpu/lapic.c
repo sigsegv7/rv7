@@ -337,6 +337,18 @@ lapic_enable(struct mcb *mcb)
     lapic_write(mcb, LAPIC_REG_SVR, svr | 0xFF);
 }
 
+uint32_t
+lapic_read_id(struct mcb *mcb)
+{
+    uint32_t id;
+
+    if (!mcb->has_x2apic) {
+        return (lapic_read(mcb, LAPIC_REG_ID) >> 24) & 0xF;
+    } else {
+        return lapic_read(mcb, LAPIC_REG_ID);
+    }
+}
+
 void
 lapic_init(void)
 {

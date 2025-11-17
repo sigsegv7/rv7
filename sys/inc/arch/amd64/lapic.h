@@ -91,6 +91,11 @@ struct lapic_ipi {
 };
 
 /*
+ * Read the current local APIC id
+ */
+uint32_t lapic_read_id(struct mcb *mcb);
+
+/*
  * Send an interprocessor interrupt
  *
  * Returns zero on success
