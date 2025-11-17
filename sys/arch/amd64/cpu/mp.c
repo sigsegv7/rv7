@@ -73,6 +73,11 @@ cpu_lapic_cb(struct apic_header *h, size_t arg)
         return -1;
     }
 
+    /* If not online capable, continue */
+    if (!ISSET(lapic->flags, 0x3)) {
+        return -1;
+    }
+
     /* Prepare the IPI packet */
     ipi.dest_id = lapic->apic_id;
     ipi.vector = 0;
