@@ -31,7 +31,17 @@
 #define _MU_CPU_H_ 1
 
 #include <sys/types.h>
-#include <kern/cpu.h>
+
+/*
+ * Processor descriptor
+ *
+ * @id: Logical ID of the processor
+ * @self: Self pointer for referencing via %GS
+ */
+struct cpu_info {
+    uint8_t id;
+    struct cpu_info *self;
+};
 
 /*
  * Get a reference to the processor descriptor
