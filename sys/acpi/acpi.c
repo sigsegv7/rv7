@@ -28,6 +28,7 @@
  */
 
 #include <sys/cdefs.h>
+#include <sys/errno.h>
 #include <sys/types.h>
 #include <kern/panic.h>
 #include <os/trace.h>
@@ -109,6 +110,46 @@ acpi_query(const char *s)
     }
 
     return NULL;
+}
+
+int
+acpi_read_madt(uint32_t type, int(*cb)(struct apic_header *, size_t), size_t arg)
+{
+    static struct acpi_madt *madt;
+    struct apic_header *hdr;
+    uint8_t *cur, *end;
+    int retval;
+
+    if (cb == NULL) {
+        return -EINVAL;
+    }
+
+    if (madt == NULL) {
+        madt = acpi_query("APIC");
+    }
+
+    if (madt == NULL) {
+        panic("acpi: could not read MADT\n");
+    }
+
+    cur = (uint8_t *)(madt + 1);
+    end = (uint8_t *)madt + madt->hdr.length;
+
+    while (cur < end) {
+        hdr = (void *)cur;
+
+        if (hdr->type == type) {
+            retval = cb(hdr, arg);
+        }
+
+        if (retval >= 0) {
+            return retval;
+        }
+
+        cur += hdr->length;
+    }
+
+    return -1;
 }
 
 void

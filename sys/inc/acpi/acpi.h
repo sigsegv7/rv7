@@ -31,6 +31,7 @@
 #define _ACPI_ACPI_H_ 1
 
 #include <sys/types.h>
+#include <acpi/tables.h>
 
 /*
  * Initialize the ACPI subsystem
@@ -41,5 +42,13 @@ void acpi_init(void);
  * Query an ACPI table using its signature
  */
 void *acpi_query(const char *s);
+
+/*
+ * Acquire a MADT entry by type
+ */
+int acpi_read_madt(
+    uint32_t type, int(*cb)(struct apic_header *h, size_t arg),
+    size_t arg
+);
 
 #endif  /* !_ACPI_ACPI_H_ */
