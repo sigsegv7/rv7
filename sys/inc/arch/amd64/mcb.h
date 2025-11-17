@@ -27,32 +27,22 @@
  * PKERNSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _MU_CPU_H_
-#define _MU_CPU_H_ 1
+#ifndef _MACHINE_MCB_H_
+#define _MACHINE_MCB_H_ 1
 
 #include <sys/types.h>
-#include <md/mcb.h>
 
 /*
- * Processor descriptor
+ * The machine core block (MCB) contains machine
+ * specific information and should only be touched
+ * within machine specific contexts
  *
- * @id: Logical ID of the processor
- * @mcb: Machine core block
+ * @hwid: Hardware APIC ID
+ * @xapic_io: MMIO base for the legacy xAPIC
  */
-struct cpu_info {
-    uint8_t id;
-    struct mcb *mcb;
+struct mcb {
+    uint32_t hwid;
+    void *xapic_io;
 };
 
-/*
- * Get a reference to the processor descriptor
- * for the current core
- */
-struct cpu_info *cpu_self(void);
-
-/*
- * Configure a processor core
- */
-void cpu_conf(struct cpu_info *ci);
-
-#endif  /* !_MU_CPU_H_ */
+#endif  /* !_MACHINE_MCB_H_ */
