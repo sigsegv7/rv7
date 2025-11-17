@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025 Ian Marco Moffett and the Osmora Team.
+ * Copyright (c) 2023-2025 Ian Marco Moffett and the Osmora Team.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -16,43 +16,24 @@
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPKERNE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
  * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
  * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
  * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
- * SUBSTITUTE GOODS OR SERVICES; LKERNS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
  * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
  * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
- * PKERNSIBILITY OF SUCH DAMAGE.
+ * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _MU_CPU_H_
-#define _MU_CPU_H_ 1
-
-#include <sys/types.h>
-#include <md/mcb.h>
+#ifndef _MACHINE_LAPIC_H_
+#define _MACHINE_LAPIC_H_ 1
 
 /*
- * Processor descriptor
- *
- * @id: Logical ID of the processor
- * @mcb: Machine core block
+ * Initialize the Local APIC on-board the
+ * processor for the current core
  */
-struct cpu_info {
-    uint8_t id;
-    struct mcb mcb;
-};
+void lapic_init(void);
 
-/*
- * Get a reference to the processor descriptor
- * for the current core
- */
-struct cpu_info *cpu_self(void);
-
-/*
- * Configure a processor core
- */
-void cpu_conf(struct cpu_info *ci);
-
-#endif  /* !_MU_CPU_H_ */
+#endif  /* !_MACHINE_LAPIC_H_ */

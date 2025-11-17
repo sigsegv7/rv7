@@ -32,6 +32,7 @@
 #include <os/trace.h>
 #include <mu/cpu.h>
 #include <md/msr.h>
+#include <md/lapic.h>
 
 struct cpu_info *
 cpu_self(void)
@@ -49,4 +50,5 @@ void
 cpu_conf(struct cpu_info *ci)
 {
     wrmsr(IA32_GS_BASE, (uintptr_t)ci);
+    lapic_init();
 }

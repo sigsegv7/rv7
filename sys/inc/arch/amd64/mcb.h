@@ -39,10 +39,12 @@
  *
  * @hwid: Hardware APIC ID
  * @xapic_io: MMIO base for the legacy xAPIC
+ * @has_x2apic: Set if x2APIC mode is supported
  */
 struct mcb {
     uint32_t hwid;
     void *xapic_io;
+    uint8_t has_x2apic : 1;
 };
 
 #endif  /* !_MACHINE_MCB_H_ */
