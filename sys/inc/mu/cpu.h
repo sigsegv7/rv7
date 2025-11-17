@@ -55,4 +55,9 @@ struct cpu_info *cpu_self(void);
  */
 void cpu_conf(struct cpu_info *ci);
 
+/*
+ * Bring up application processors
+ */
+void cpu_start_aps(struct cpu_info *ci);
+
 #endif  /* !_MU_CPU_H_ */

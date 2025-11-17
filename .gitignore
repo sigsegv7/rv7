@@ -8,5 +8,6 @@
 *.log
 *.status
 *.iso
+*.bin
 *.o
 *.d

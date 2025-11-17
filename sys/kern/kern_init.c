@@ -48,4 +48,5 @@ kmain(void)
     vm_init();
     acpi_init();
     cpu_conf(&g_bsp);
+    cpu_start_aps(&g_bsp);
 }

@@ -23,6 +23,10 @@ SECTIONS
         *(.rodata .rodata.*)
     } :rodata
 
+    .trampoline : ALIGN(8) {
+        *(.trampoline.*)
+    }
+
     . += CONSTANT(MAXPAGESIZE);
 
     .data : {
