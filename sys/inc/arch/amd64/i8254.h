@@ -32,6 +32,8 @@
 
 #include <sys/types.h>
 
+#define I8254_DIVIDEND    1193182ULL
+
 /*
  * Set the current counter value of the i8254
  * main channel
