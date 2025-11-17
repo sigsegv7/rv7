@@ -334,7 +334,7 @@ lapic_enable(struct mcb *mcb)
     /* Software enable the Local APIC unit */
     svr = lapic_read(mcb, LAPIC_REG_SVR);
     svr |= LAPIC_SVR_APIC_EN;
-    lapic_write(mcb, LAPIC_REG_SVR, svr);
+    lapic_write(mcb, LAPIC_REG_SVR, svr | 0xFF);
 }
 
 void
