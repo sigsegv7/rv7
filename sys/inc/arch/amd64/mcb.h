@@ -40,11 +40,13 @@
  * @hwid: Hardware APIC ID
  * @xapic_io: MMIO base for the legacy xAPIC
  * @has_x2apic: Set if x2APIC mode is supported
+ * @lapic_tmr_freq: Frequency of Local APIC timer
  */
 struct mcb {
     uint32_t hwid;
     void *xapic_io;
     uint8_t has_x2apic : 1;
+    size_t lapic_tmr_freq;
 };
 
 #endif  /* !_MACHINE_MCB_H_ */

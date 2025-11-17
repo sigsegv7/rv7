@@ -30,6 +30,8 @@
 #ifndef _MACHINE_LAPIC_H_
 #define _MACHINE_LAPIC_H_ 1
 
+#define LAPIC_TMR_VEC 0x81
+
 /*
  * Initialize the Local APIC on-board the
  * processor for the current core

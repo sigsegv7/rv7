@@ -39,6 +39,7 @@
 #include <lib/stdbool.h>
 #include <mu/cpu.h>
 #include <md/lapic.h>
+#include <md/i8254.h>
 #include <md/cpuid.h>
 #include <md/msr.h>
 
@@ -53,13 +54,27 @@
  *
  * See section 2.3.2 of the x2APIC specification
  */
-#define LAPIC_REG_ID   0x0020       /* ID register */
-#define LAPIC_REG_SVR  0x00F0       /* Spurious vector register */
+#define LAPIC_REG_ID        0x0020       /* ID register */
+#define LAPIC_REG_SVR       0x00F0       /* Spurious vector register */
+#define LAPIC_REG_TICR      0x0380       /* Timer initial counter register */
+#define LAPIC_REG_TCCR      0x0390       /* Timer current counter register */
+#define LAPIC_REG_TDCR      0x03E0       /* Timer divide configuration register */
+#define LAPIC_REG_LVTTMR    0x0320       /* LVT timer entry */
 
 /* LAPIC SVR bits */
 #define LAPIC_SVR_EBS       BIT(12)     /* EOI-broadcast supression */
 #define LAPIC_SVR_FPC       BIT(9)      /* Focus processor checking */
 #define LAPIC_SVR_APIC_EN   BIT(8)      /* Software-enable Local APIC */
+
+/* Local vector table */
+#define LVT_MASK    BIT(16)
+
+/* Samples to take */
+#define LAPIC_TMR_SAMPLES 0xFFFF
+
+/* Timer modes */
+#define LAPIC_TMR_ONESHOT   0x00
+#define LAPIC_TMR_PERIODIC  0x01
 
 /* Accessed via RDMSR/WRMSR */
 #define X2APIC_MSR_BASE 0x00000800
@@ -126,6 +141,85 @@ lapic_has_x2apic(void)
 }
 
 /*
+ * Configure the Local APIC timer with a predefined
+ * vector
+ *
+ * XXX: See LAPIC_TMR_* for mode definitions
+ */
+static void
+lapic_tmr_enable(struct mcb *mcb, uint8_t mode)
+{
+    uint32_t lvt_tmr;
+
+    lvt_tmr = lapic_read(mcb, LAPIC_REG_LVTTMR);
+
+    /* Clear out stale values */
+    lvt_tmr &= ~0xFF;               /* Clear vector */
+    lvt_tmr &= ~(0x3 << 17);        /* Clear mode */
+    lvt_tmr &= ~LVT_MASK;           /* Clear mask */
+
+    /* Set them to our own values */
+    lvt_tmr |= (mode & 0x3) << 17;  /* Set mode */
+    lvt_tmr |= LAPIC_TMR_VEC;       /* Set vector */
+    lapic_write(mcb, LAPIC_REG_LVTTMR, lvt_tmr);
+}
+
+/*
+ * Disable the Local APIC timer
+ */
+static void
+lapic_tmr_disable(struct mcb *mcb)
+{
+    uint32_t lvt_tmr;
+
+    lvt_tmr = lapic_read(mcb, LAPIC_REG_LVTTMR);
+    lvt_tmr |= LVT_MASK;        /* Set mask */
+    lvt_tmr &= ~0xFF;           /* Clear vector; just in case */
+    lapic_write(mcb, LAPIC_REG_LVTTMR, lvt_tmr);
+}
+
+/*
+ * Calibrate the Local APIC timer
+ */
+static size_t
+lapic_tmr_clbr(struct mcb *mcb)
+{
+    size_t freq;
+    uint16_t ticks_total;
+    uint16_t ticks_begin, ticks_end;
+    uint32_t tmp;
+
+    /*
+     * The divide configuration register basically slices
+     * up the base clock (typically TSC core crystal clock or
+     * bus clock) which makes the counter decrement slower with
+     * respect to higher values
+     */
+    tmp = lapic_read(mcb, LAPIC_REG_TDCR);
+    tmp &= ~BIT(3);     /* Clear upper */
+    tmp &= ~0x3;        /* Clear lower */
+    tmp |= 0x01;        /* DCR=0b001[divide by 4] */
+    lapic_write(mcb, LAPIC_REG_TDCR, tmp);
+
+    lapic_tmr_disable(mcb);
+    i8254_set_count(LAPIC_TMR_SAMPLES);
+
+    /* Take some samples of the counter */
+    ticks_begin = i8254_get_count();
+    lapic_write(mcb, LAPIC_REG_TICR, LAPIC_TMR_SAMPLES);
+    while (lapic_read(mcb, LAPIC_REG_TCCR) != 0);
+
+    /* Compute the deviation [total ticks] */
+    lapic_tmr_disable(mcb);
+    ticks_end = i8254_get_count();
+    ticks_total = ticks_end - ticks_begin;
+
+    /* Compute the frequency */
+    freq = (LAPIC_TMR_SAMPLES / ticks_total) * I8254_DIVIDEND;
+    return freq;
+}
+
+/*
  * Enable the Local APIC unit
  */
 static void
@@ -183,5 +277,7 @@ lapic_init(void)
 
     mcb = &ci->mcb;
     mcb->xapic_io = PHYS_TO_VIRT((uintptr_t)madt->lapic_addr);
+
     lapic_enable(mcb);
+    mcb->lapic_tmr_freq = lapic_tmr_clbr(mcb);
 }
