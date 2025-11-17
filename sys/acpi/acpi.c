@@ -33,6 +33,7 @@
 #include <os/trace.h>
 #include <acpi/acpi.h>
 #include <acpi/tables.h>
+#include <dev/clkdev/hpet.h>
 #include <vm/vm.h>
 #include <lib/limine.h>
 #include <lib/string.h>
@@ -113,6 +114,8 @@ acpi_query(const char *s)
 void
 acpi_init(void)
 {
+    int error;
+
     rsdp_resp = rsdp_req.response;
     if (__unlikely(rsdp_resp == NULL)) {
         panic("acpi: could not obtain rsdp\n");
@@ -138,4 +141,10 @@ acpi_init(void)
     }
 
     dtrace("OK\n");
+    error = hpet_init();
+#if defined(__x86_64__)
+    if (error != 0) {
+        panic("acpi: require HPET on RV7/x86_64\n");
+    }
+#endif  /* __x86_64__ */
 }
