@@ -37,8 +37,9 @@
 extern volatile struct limine_hhdm_request hhdm_req;
 
 #define PAGESIZE  0x1000
-#define PHYS_TO_VIRT(PHYS) PTR_OFFSET(PHYS, hhdm_req.response->offset)
-#define VIRT_TO_PHYS(VIRT) (uintptr_t)PTR_NOFFET(VIRT, hhdm_req.response->offset)
+#define KERN_BASE          hhdm_req.response->offset
+#define PHYS_TO_VIRT(PHYS) PTR_OFFSET(PHYS, KERN_BASE)
+#define VIRT_TO_PHYS(VIRT) (uintptr_t)PTR_NOFFET(VIRT, KERN_BASE)
 
 /*
  * Initialize the virtual memory management
