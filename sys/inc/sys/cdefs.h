@@ -41,6 +41,7 @@
 #define __aligned(n)    __attribute__((__aligned__((n))))
 #define __unused        __attribute__((__unused__))
 #define __used          __attribute__((__used__))
+#define __section(s)    __attribute__((section(s)))
 #define __nothing       ((void)0)
 #define __likely(exp)   __builtin_expect(((exp) != 0), 1)
 #define __unlikely(exp) __builtin_expect(((exp) != 0), 0)
