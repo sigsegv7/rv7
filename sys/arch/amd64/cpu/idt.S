@@ -28,11 +28,9 @@
  */
 
 #include <md/kfence.h>
+#include <md/idt.h>
 
 #define KERNEL_CS 0x08
-
-#define INT_GATE 0x8E
-#define TRAP_GATE 0x8F
 
 .macro set_trap vector, isr
     movq \vector, %rdi

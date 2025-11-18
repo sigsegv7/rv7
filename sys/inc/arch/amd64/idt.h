@@ -30,11 +30,18 @@
 #ifndef _MACHINE_IDT_H_
 #define _MACHINE_IDT_H_ 1
 
-#include <sys/types.h>
+#define INT_GATE 0x8E
+#define TRAP_GATE 0x8F
 
+#if !defined(__ASSEMBLER__)
+#include <sys/types.h>
+#endif  /* __ASSEMBLER__ */
+
+#if !defined(__ASSEMBLER__)
 /*
  * Set an interrupt gate
  */
 void idt_set_gate(uint8_t vector, uint8_t type, uintptr_t isr, uint8_t ist);
+#endif  /* !__ASSEMBLER__ */
 
 #endif  /* !_MACHINE_IDT_H_ */
