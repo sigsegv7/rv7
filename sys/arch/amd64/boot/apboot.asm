@@ -28,9 +28,9 @@
 ;;
 
 [bits 16]
-[org 0x1000]
+[org 0x8000]
 
-%define AP_BUDA     0x3000
+%define AP_BUDA     0x9000
 %define IA32_EFER   0xC0000080
 
 [bits 16]
@@ -39,12 +39,12 @@ _start:
     out 0x21, al                    ;; Disable master PIC
     out 0xA1, al                    ;; Disable slave PIC
 
-    mov eax, dword [AP_BUDA]        ;; BUDA.CR3 -> EAX
-    mov cr3, eax                    ;; EAX -> CR3
-
     mov eax, cr4                    ;; CR4 -> EAX
     or eax, 0xA0                    ;; Enable physical address extension + PGE
     mov cr4, eax                    ;; Write it back
+
+    mov eax, dword [AP_BUDA]        ;; BUDA.CR3 -> EAX
+    mov cr3, eax                    ;; EAX -> CR3
 
     mov ecx, IA32_EFER              ;; Read IA32_EFER
     rdmsr                           ;; -> EAX
@@ -80,6 +80,8 @@ thunk64:
     mov gs, ax
     mov rsp, qword [AP_BUDA + 0x08]
     mov rbx, qword [AP_BUDA + 0x10]
+    mov rax, 1
+    xchg qword [AP_BUDA + 0x18], rax
     cld
     jmp rbx
 

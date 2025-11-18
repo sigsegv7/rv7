@@ -49,11 +49,11 @@
  * within a page and be no larger and no smaller.
  */
 #define AP_BUA_LEN   0x1000                     /* Bring up area length in bytes */
-#define AP_BUA_PADDR 0x1000                     /* Bring up area [physical] */
+#define AP_BUA_PADDR 0x8000                     /* Bring up area [physical] */
 #define AP_BUA_VADDR PHYS_TO_VIRT(AP_BUA_PADDR) /* Bring up area [virtual] */
 
 /* Bring up descriptor area */
-#define AP_BUDA_PADDR 0x3000
+#define AP_BUDA_PADDR 0x9000
 #define AP_BUDA_VADDR PHYS_TO_VIRT(AP_BUDA_PADDR)
 
 /*
@@ -74,6 +74,7 @@ struct __packed ap_buda {
     uint64_t cr3;               /* 0x00 */
     uint64_t rsp;               /* 0x08 */
     uint64_t lm_entry;          /* 0x10 */
+    uint64_t is_booted;         /* 0x18 */
 };
 
 /*
@@ -150,7 +151,7 @@ cpu_init_bootspace(struct ap_bootspace *bs)
     new_pml4[0] = bs->pml3 | 3;     /* P+RW */
     pml3[0] = bs->pml2     | 3;     /* P+RW */
     pml2[0] = bs->pml1     | 3;     /* P+RW */
-    for (uint8_t i = 0; i < 4; ++i) {
+    for (uint16_t i = 0; i < 256; ++i) {
         pml1[i] = (0x1000 * i) | 3; /* P+RW */
     }
     return 0;
@@ -244,7 +245,10 @@ cpu_lapic_cb(struct apic_header *h, size_t arg)
         hpet_msleep(2);
     }
 
-    dtrace("bootstrapping lapic %d\n", lapic->apic_id);
+    /* Wait until AP is booted */
+    while (!buda->is_booted);
+    buda->is_booted = 0;
+
     return -1;  /* Keep going */
 }
 
