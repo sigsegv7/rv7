@@ -28,10 +28,12 @@
  */
 
 #include <sys/types.h>
+#include <sys/errno.h>
 #include <sys/cdefs.h>
 #include <kern/panic.h>
 #include <mu/mmu.h>
 #include <vm/vm.h>
+#include <vm/phys.h>
 #include <md/vas.h>
 
 /*
@@ -72,6 +74,32 @@ mu_pmap_writevas(struct mmu_vas *vas)
         : "r" (vas->cr3)
         : "memory"
     );
+
+    return 0;
+}
+
+int
+mu_pmap_forkvas(struct mmu_vas *result)
+{
+    struct mmu_vas vas;
+    uintptr_t paddr, *pml4_dest;
+    uintptr_t *pml4_src;
+
+    mu_pmap_readvas(&vas);
+    paddr = vm_phys_alloc(1);
+    if (paddr == 0) {
+        return -ENOMEM;
+    }
+
+    pml4_dest = PHYS_TO_VIRT(paddr);
+    pml4_src = PHYS_TO_VIRT(vas.cr3);
+    for (uint16_t i = 0; i < 512; ++i) {
+        if (i < 256) {
+            pml4_dest[i] = 0;
+        } else {
+            pml4_dest[i] = pml4_src[i];
+        }
+    }
 
     return 0;
 }

@@ -35,6 +35,12 @@
 #include <md/vas.h>    /* shared */
 
 /*
+ * Copy the current VAS leaving the user-side
+ * zeroed
+ */
+__strong int mu_pmap_forkvas(struct mmu_vas *result);
+
+/*
  * Read the currently in-use virtual address space
  * structure
  */

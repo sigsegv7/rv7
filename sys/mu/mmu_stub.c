@@ -30,6 +30,12 @@
 #include <sys/cdefs.h>
 #include <mu/mmu.h>
 
+__weak int
+mu_pmap_forkvas(struct mmu_vas *result)
+{
+    (void)result;
+}
+
 __weak void
 mu_pmap_init(void)
 {
