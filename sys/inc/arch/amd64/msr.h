@@ -42,6 +42,7 @@
 #define IA32_MTRR_PHYSBASE  0x00000200
 #define IA32_MTRR_PHYSMASK  0x00000201
 #define IA32_KERNEL_GS_BASE 0xC0000102
+#define IA32_EFER           0xC0000080
 
 #if !defined(__ASSEMBLER__)
 __always_inline static inline uint64_t

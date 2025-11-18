@@ -38,6 +38,7 @@
 #include <lib/string.h>
 #include <md/lapic.h>
 #include <md/msr.h>
+#include <md/cpu.h>
 #include <mu/cpu.h>
 #include <vm/vm.h>
 #include <vm/phys.h>
@@ -261,6 +262,7 @@ cpu_lm_entry(void)
         : "rax", "rbx"
     );
 
+    cpu_loinit();
     for (;;) {
         __asmv("cli; hlt");
     }

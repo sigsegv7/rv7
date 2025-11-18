@@ -27,6 +27,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <md/msr.h>
+
     .text
     .globl _start
     .extern uart_init
@@ -44,6 +46,7 @@ _start:
     lea GDTR(%rip), %rdi    /* Our GDTR */
     call gdt_load           /* Load our GDT */
     call idt_load           /* Load our IDT */
+    call cpu_loinit         /* Initialize processor state */
 
     /*
      * RV7 will default to APIC operation, as per a section
@@ -61,6 +64,31 @@ _start:
 1:  cli
     hlt
     jmp 1b
+
+    .globl cpu_loinit
+cpu_loinit:
+    /*
+     * Initialize low-level CPU state
+     */
+    push %r12
+    push %r13
+    push %r14
+    push %r15
+    push %rbx
+    push %rbp
+
+    mov $IA32_EFER, %ecx    /* IA32_EFER */
+    rdmsr                   /* -> EAX */
+    or $1<<11, %eax         /* EFER.NXE */
+    wrmsr                   /* Write it back */
+
+    pop %rbp
+    pop %rbx
+    pop %r15
+    pop %r14
+    pop %r13
+    pop %r12
+    retq
 
     .section .rodata
 bootmsg:
