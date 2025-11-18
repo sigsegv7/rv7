@@ -29,6 +29,8 @@
 
 #include <sys/types.h>
 #include <sys/cdefs.h>
+#include <sys/errno.h>
+#include <sys/param.h>
 #include <acpi/acpi.h>
 #include <os/trace.h>
 #include <kern/panic.h>
@@ -37,6 +39,7 @@
 #include <md/lapic.h>
 #include <mu/cpu.h>
 #include <vm/vm.h>
+#include <vm/phys.h>
 
 #define dtrace(fmt, ...) trace("mp: " fmt, ##__VA_ARGS__)
 
@@ -49,7 +52,134 @@
 #define AP_BUA_PADDR 0x1000                     /* Bring up area [physical] */
 #define AP_BUA_VADDR PHYS_TO_VIRT(AP_BUA_PADDR) /* Bring up area [virtual] */
 
+/* Bring up descriptor area */
+#define AP_BUDA_PADDR 0x3000
+#define AP_BUDA_VADDR PHYS_TO_VIRT(AP_BUDA_PADDR)
+
+/*
+ * A bring up descriptor area gives a processor everything
+ * it needs to have to get up on its paws without doing it
+ * from scratch.
+ *
+ * @cr3: Virtual address space to switch to
+ * @rsp: Stack pointer to switch to
+ * @lm_entry: Long mode entry trampoline
+ *
+ * XXX: Each field is to be 8 bytes for alignment purposes
+ *
+ * XXX: Do *not* reorder this as it is acessed from the trampoline
+ *      located in apboot.asm
+ */
+struct __packed ap_buda {
+    uint64_t cr3;               /* 0x00 */
+    uint64_t rsp;               /* 0x08 */
+    uint64_t lm_entry;          /* 0x10 */
+};
+
+/*
+ * Represents the bootstrap address space used
+ * for bringing up the APs
+ */
+struct ap_bootspace {
+    uintptr_t pml4;
+    uintptr_t pml3;
+    uintptr_t pml2;
+    uintptr_t pml1;
+};
+
+static struct ap_bootspace bs;
+static volatile size_t ap_sync = 0;
 __section(".trampoline") static char ap_code[4096];
+
+/*
+ * Initialize the boot address space
+ */
+static int
+cpu_init_bootspace(struct ap_bootspace *bs)
+{
+    uintptr_t old_pml4_pa, *old_pml4;
+    uintptr_t *new_pml4;
+    uintptr_t *pml3, *pml2, *pml1;
+
+    if (bs == NULL) {
+        return -EINVAL;
+    }
+
+    bs->pml4 = vm_phys_alloc(1);
+    if (bs->pml4 == 0) {
+        return -ENOMEM;
+    }
+
+    bs->pml3 = vm_phys_alloc(1);
+    if (bs->pml3 == 0) {
+        vm_phys_free(bs->pml4, 1);
+        return -ENOMEM;
+    }
+
+    bs->pml2 = vm_phys_alloc(1);
+    if (bs->pml2 == 0) {
+        vm_phys_free(bs->pml4, 1);
+        vm_phys_free(bs->pml3, 1);
+        return -ENOMEM;
+    }
+
+    bs->pml1 = vm_phys_alloc(1);
+    if (bs->pml1 == 0) {
+        vm_phys_free(bs->pml4, 1);
+        vm_phys_free(bs->pml3, 1);
+        vm_phys_free(bs->pml2, 1);
+        return -ENOMEM;
+    }
+
+    /* Fork our old one */
+    __asmv("mov %%cr3, %0" : "=r" (old_pml4_pa) :: "memory");
+    old_pml4 = PHYS_TO_VIRT(old_pml4_pa);
+    new_pml4 = PHYS_TO_VIRT(bs->pml4);
+    for (uintptr_t i = 0; i < 512; ++i) {
+        new_pml4[i] = old_pml4[i];
+    }
+
+    pml3 = PHYS_TO_VIRT(bs->pml3);
+    pml2 = PHYS_TO_VIRT(bs->pml2);
+    pml1 = PHYS_TO_VIRT(bs->pml1);
+
+    /*
+     * Now we link the tables up and identity map the
+     * first 4 pages
+     */
+    new_pml4[0] = bs->pml3 | 3;     /* P+RW */
+    pml3[0] = bs->pml2     | 3;     /* P+RW */
+    pml2[0] = bs->pml1     | 3;     /* P+RW */
+    for (uint8_t i = 0; i < 4; ++i) {
+        pml1[i] = (0x1000 * i) | 3; /* P+RW */
+    }
+    return 0;
+}
+
+static int
+cpu_free_bootspace(struct ap_bootspace *bs)
+{
+    if (bs == NULL) {
+        return -EINVAL;
+    }
+
+    vm_phys_free(bs->pml3, 1);
+    vm_phys_free(bs->pml2, 1);
+    vm_phys_free(bs->pml1, 1);
+    memset(bs, 0, sizeof(*bs));
+    return 0;
+}
+
+/*
+ * Processor long-mode entrypoint
+ */
+static void
+cpu_lm_entry(void)
+{
+    for (;;) {
+        __asmv("cli; hlt");
+    }
+}
 
 static int
 cpu_lapic_cb(struct apic_header *h, size_t arg)
@@ -58,14 +188,14 @@ cpu_lapic_cb(struct apic_header *h, size_t arg)
     struct cpu_info *self;
     struct mcb *mcb;
     struct lapic_ipi ipi;
+    struct ap_buda *buda;
+    uintptr_t stack;
     int error;
 
     self = cpu_self();
     if (self == NULL) {
         panic("mp: could not get self\n");
     }
-
-    mcb = &self->mcb;
 
     /* Skip ourselves */
     lapic = (struct local_apic *)h;
@@ -77,6 +207,18 @@ cpu_lapic_cb(struct apic_header *h, size_t arg)
     if (!ISSET(lapic->flags, 0x3)) {
         return -1;
     }
+
+    mcb = &self->mcb;
+    buda = (struct ap_buda *)AP_BUDA_VADDR;
+    stack = vm_phys_alloc(1);
+    if (stack == 0) {
+        panic("mp: failed to allocate stack\n");
+    }
+
+    cpu_init_bootspace(&bs);
+    buda->rsp = (stack + (PAGESIZE - 1)) + KERN_BASE;
+    buda->lm_entry = (uintptr_t)cpu_lm_entry;
+    buda->cr3 = bs.pml4;
 
     /* Prepare the IPI packet */
     ipi.dest_id = lapic->apic_id;
@@ -123,6 +265,9 @@ cpu_start_aps(struct cpu_info *ci)
     if (self == NULL) {
         panic("mp: could not get current processor\n");
     }
+
+    /* Initialize the bootspace */
+    cpu_init_bootspace(&bs);
 
     /* Copy the bring up code to the BUA */
     bua = AP_BUA_VADDR;
