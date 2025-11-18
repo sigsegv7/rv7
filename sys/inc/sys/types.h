@@ -52,4 +52,8 @@ typedef int64_t     ssize_t;
 typedef size_t      off_t;
 typedef size_t      uintptr_t;
 
+/* ID types */
+typedef int32_t     id_t;
+typedef id_t        pid_t;
+
 #endif  /* !_SYS_TYPES_H_ */
