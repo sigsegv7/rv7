@@ -35,6 +35,8 @@
 #include <vm/vm.h>
 #include <vm/phys.h>
 #include <md/vas.h>
+#include <lib/stdbool.h>
+#include <lib/string.h>
 
 /*
  * See Intel SDM Vol 3A, Section 4.5, Table 4-19
@@ -50,6 +52,143 @@
 #define PTE_PS          BIT(7)        /* Page size */
 #define PTE_GLOBAL      BIT(8)        /* Global / sticky map */
 #define PTE_NX          BIT(63)       /* Execute-disable */
+
+typedef enum {
+    PMAP_PML1,
+    PMAP_PML2,
+    PMAP_PML3,
+    PMAP_PML4
+} pagelevel_t;
+
+/*
+ * Invalidate a single TLB entry
+ */
+static inline void
+pmap_invlpg(uintptr_t pa)
+{
+    __asm(
+        "invlpg (%0)"
+        :
+        : "r" (pa)
+        : "memory"
+    );
+}
+
+/*
+ * Convert protection flags to page table flags
+ */
+static size_t
+pmap_prot_conv(uint16_t prot)
+{
+    size_t pte = PTE_P | PTE_NX;
+
+    if (ISSET(prot, PROT_WRITE))
+        pte |= PTE_RW;
+    if (ISSET(prot, PROT_EXEC))
+        pte &= ~PTE_NX;
+    if (ISSET(prot, PROT_USER))
+        pte |= PTE_US;
+
+    return pte;
+}
+
+/*
+ * Get the index of a pagemap level using a linear
+ * address and the specified desired level
+ */
+static inline size_t
+pmap_get_index(uintptr_t va, pagelevel_t level)
+{
+    switch (level) {
+    case PMAP_PML4:
+        return (va >> 39) & 0x1FF;
+    case PMAP_PML3:
+        return (va >> 30) & 0x1FF;
+    case PMAP_PML2:
+        return (va >> 21) & 0x1FF;
+    case PMAP_PML1:
+        return (va >> 12) & 0x1FF;
+    }
+
+    panic("vm: panic index in %s()\n", __func__);
+}
+
+/*
+ * Perform full or partial linear address translation by virtue
+ * of iterative descent.
+ *
+ * @vas: Virtual address space to target
+ * @va: Virtual address to translate
+ * @en_alloc: If true, allocate new levels if needed
+ * @lvl: Requested level
+ */
+static uintptr_t *
+pmap_get_level(struct mmu_vas *vas, uintptr_t va, bool en_alloc, pagelevel_t lvl)
+{
+    uintptr_t *pmap, phys;
+    uint8_t *tmp;
+    size_t index;
+    pagelevel_t curlvl;
+
+    if (vas == NULL) {
+        return NULL;
+    }
+
+    /* Start here */
+    phys = vas->cr3;
+    pmap = PHYS_TO_VIRT(phys);
+    curlvl = PMAP_PML4;
+
+    /* Start moving down */
+    while ((curlvl--) > lvl) {
+        index = pmap_get_index(va, curlvl);
+        if (ISSET(pmap[index], PTE_P)) {
+            return PHYS_TO_VIRT(pmap[index] & PTE_ADDR_MASK);
+        }
+
+        if (!en_alloc) {
+            return NULL;
+        }
+
+        /* Allocate a new level */
+        phys = vm_phys_alloc(1);
+        if (phys == 0) {
+            return NULL;
+        }
+
+        /* Ensure it is zeroed */
+        tmp = PHYS_TO_VIRT(phys);
+        memset(tmp, 0, 4096);
+
+        pmap[index] = phys | (PTE_P | PTE_RW | PTE_US);
+        pmap = (uintptr_t *)tmp;
+    }
+
+    return pmap;
+}
+
+int
+mu_pmap_map(struct mmu_vas *vas, uintptr_t pa, uintptr_t va,
+    uint16_t prot, pagesize_t ps)
+{
+    uintptr_t *pgtbl;
+    size_t index, pte_flags;
+
+    if (vas == NULL || ps > PMAP_PML4) {
+        return -EINVAL;
+    }
+
+    pgtbl = pmap_get_level(vas, va, true, PMAP_PML1);
+    if (pgtbl == NULL) {
+        return -ENOMEM;
+    }
+
+    index = pmap_get_index(va, PMAP_PML1);
+    pte_flags = pmap_prot_conv(prot);
+    pgtbl[index] = pa | pte_flags;
+    pmap_invlpg(va);
+    return 0;
+}
 
 int
 mu_pmap_readvas(struct mmu_vas *vas)

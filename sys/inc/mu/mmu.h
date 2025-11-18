@@ -30,9 +30,24 @@
 #ifndef _MU_PMAP_H_
 #define _MU_PMAP_H_ 1
 
+#include <sys/mman.h>
 #include <sys/types.h>
 #include <sys/cdefs.h>
 #include <md/vas.h>    /* shared */
+
+typedef enum {
+    PAGESIZE_4K,
+} pagesize_t;
+
+/*
+ * Create a virtual to physical mapping of a single
+ * page of memory with a specific page size and specific
+ * protection flags.
+ */
+__strong int mu_pmap_map(
+    struct mmu_vas *vas, uintptr_t pa, uintptr_t va,
+    uint16_t prot, pagesize_t ps
+);
 
 /*
  * Copy the current VAS leaving the user-side

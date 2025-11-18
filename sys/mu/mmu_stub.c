@@ -31,6 +31,18 @@
 #include <mu/mmu.h>
 
 __weak int
+mu_pmap_map(struct mmu_vas *vas, uintptr_t pa, uintptr_t va, uint16_t prot,
+    pagesize_t ps)
+
+{
+    (void)vas;
+    (void)pa;
+    (void)va;
+    (void)prot;
+    (void)ps;
+}
+
+__weak int
 mu_pmap_forkvas(struct mmu_vas *result)
 {
     (void)result;
