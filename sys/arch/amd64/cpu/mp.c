@@ -215,7 +215,6 @@ cpu_lapic_cb(struct apic_header *h, size_t arg)
         panic("mp: failed to allocate stack\n");
     }
 
-    cpu_init_bootspace(&bs);
     buda->rsp = (stack + (PAGESIZE - 1)) + KERN_BASE;
     buda->lm_entry = (uintptr_t)cpu_lm_entry;
     buda->cr3 = bs.pml4;
