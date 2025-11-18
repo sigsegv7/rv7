@@ -31,6 +31,7 @@
 #define _MACHINE_LAPIC_H_ 1
 
 #include <sys/types.h>
+#include <lib/stdbool.h>
 #include <mu/cpu.h>
 
 #define LAPIC_TMR_VEC 0x81
@@ -89,6 +90,12 @@ struct lapic_ipi {
     ipi_shand_t shorthand : 2;
     uint8_t logical_dest : 1;
 };
+
+/*
+ * Put the local APIC timer in one shot mode and fire it
+ * off
+ */
+void lapic_oneshot_usec(struct mcb *mcb, size_t usec);
 
 /*
  * Read the current local APIC id

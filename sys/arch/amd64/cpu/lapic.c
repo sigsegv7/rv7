@@ -43,6 +43,7 @@
 #include <md/i8254.h>
 #include <md/cpuid.h>
 #include <md/msr.h>
+#include <md/idt.h>
 
 #define dtrace(fmt, ...) trace("lapic: " fmt, ##__VA_ARGS__)
 
@@ -82,6 +83,7 @@
 /* Accessed via RDMSR/WRMSR */
 #define X2APIC_MSR_BASE 0x00000800
 
+extern void lapic_tmr_isr(void);
 static struct acpi_madt *madt;
 
 /*
@@ -337,6 +339,17 @@ lapic_enable(struct mcb *mcb)
     lapic_write(mcb, LAPIC_REG_SVR, svr | 0xFF);
 }
 
+static void
+lapic_timer_oneshot(struct mcb *mcb, size_t count)
+{
+    if (mcb == NULL) {
+        return;
+    }
+
+    lapic_tmr_enable(mcb, LAPIC_TMR_ONESHOT);
+    lapic_write(mcb, LAPIC_REG_TICR, count);
+}
+
 uint32_t
 lapic_read_id(struct mcb *mcb)
 {
@@ -347,6 +360,16 @@ lapic_read_id(struct mcb *mcb)
     } else {
         return lapic_read(mcb, LAPIC_REG_ID);
     }
+}
+
+void
+lapic_oneshot_usec(struct mcb *mcb, size_t usec)
+{
+    if (mcb == NULL) {
+        return;
+    }
+
+    lapic_timer_oneshot(mcb, mcb->lapic_tmr_freq / 1000000);
 }
 
 void
@@ -375,4 +398,5 @@ lapic_init(void)
 
     lapic_enable(mcb);
     mcb->lapic_tmr_freq = lapic_tmr_clbr(mcb);
+    idt_set_gate(LAPIC_TMR_VEC, INT_GATE, (uintptr_t)lapic_tmr_isr, 0);
 }

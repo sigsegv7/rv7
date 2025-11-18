@@ -306,6 +306,15 @@ page_fault:
     jmp 1b
     hlt
 
+    .globl lapic_tmr_isr
+lapic_tmr_isr:
+    KFENCE
+    push_frame 0x81
+    nop
+    pop_frame 0x81
+    KFENCE
+    iretq
+
     .section .data
     .align 8
 IDT:
