@@ -37,6 +37,7 @@
 #include <dev/clkdev/hpet.h>
 #include <lib/string.h>
 #include <md/lapic.h>
+#include <md/msr.h>
 #include <mu/cpu.h>
 #include <vm/vm.h>
 #include <vm/phys.h>
@@ -88,9 +89,50 @@ struct ap_bootspace {
     uintptr_t pml1;
 };
 
+/*
+ * A temporary area to save the BSPs MTRRs so they
+ * can be loaded into the APs
+ */
+struct mtrr_save {
+    uintptr_t physbase[256];
+    uintptr_t physmask[256];
+} mtrr_save;
+
 static struct ap_bootspace bs;
 static volatile size_t ap_sync = 0;
 __section(".trampoline") static char ap_code[4096];
+
+static void
+cpu_mtrr_save(void)
+{
+    uint64_t mtrr_cap;
+    uint64_t physbase, physmask;
+    uint8_t mtrr_count;
+
+    mtrr_cap = rdmsr(IA32_MTRR_CAP);
+    mtrr_count = mtrr_cap & 0xFF;
+
+    for (size_t i = 0; i < mtrr_count; ++i) {
+        mtrr_save.physbase[i] = rdmsr(IA32_MTRR_PHYSBASE + (2 * i));
+        mtrr_save.physmask[i] = rdmsr(IA32_MTRR_PHYSMASK + (2 * i));
+    }
+}
+
+static void
+cpu_mtrr_fetch(void)
+{
+    uint64_t mtrr_cap;
+    uint64_t physbase, physmask;
+    uint8_t mtrr_count;
+
+    mtrr_cap = rdmsr(IA32_MTRR_CAP);
+    mtrr_count = mtrr_cap & 0xFF;
+
+    for (size_t i = 0; i < mtrr_count; ++i) {
+        wrmsr(IA32_MTRR_PHYSBASE + (2 * i), mtrr_save.physbase[i]);
+        wrmsr(IA32_MTRR_PHYSMASK + (2 * i), mtrr_save.physmask[i]);
+    }
+}
 
 /*
  * Initialize the boot address space
@@ -177,6 +219,48 @@ cpu_free_bootspace(struct ap_bootspace *bs)
 static void
 cpu_lm_entry(void)
 {
+    /*
+     * Put the processor in no cache fill mode so that we can safely
+     * update MTRRs without worrying about the ground moving under
+     * us...
+     */
+    __asmv(
+        "mov %%cr0, %%rax\n\t"        /* CR0 -> RAX */
+        "or $0x40000000, %%rax\n\t"   /* Set CR0.CD */
+        "mov $0xDFFFFFFF, %%rbx\n\t"  /* ~(1 << 31) -> RBX */
+        "and %%rbx, %%rax\n\t"        /* Unset CR0.NW */
+        "mov %%rax, %%cr0\n\t"        /* Write it back */
+        :
+        :
+        : "rax", "rbx"
+    );
+
+    /* Flush all caches */
+    __asmv(
+        "wbinvd\n\t"                /* Write-back and flush dcache */
+        "mov %%cr3, %%rax\n\t"      /* CR3 -> RAX */
+        "mov %%rax, %%cr3"          /* RAX -> CR3; flush TLB */
+        :
+        :
+        : "memory", "rax"
+    );
+
+    cpu_mtrr_fetch();
+
+    /*
+     * Now we load all the MTRRs given to us by the BSP
+     * before we re-enable normal caching operation
+     */
+    __asmv(
+        "mov %%cr0, %%rax\n\t"          /* CR0 -> RAX */
+        "mov $0xBFFFFFFF, %%rbx\n\t"    /* ~(1 << 30) -> RBX */
+        "and %%rbx, %%rax\n\t"          /* Unset CR0.CD */
+        "mov %%rax, %%cr0\n\t"          /* Write it back */
+        :
+        :
+        : "rax", "rbx"
+    );
+
     for (;;) {
         __asmv("cli; hlt");
     }
@@ -271,6 +355,7 @@ cpu_start_aps(struct cpu_info *ci)
 
     /* Initialize the bootspace */
     cpu_init_bootspace(&bs);
+    cpu_mtrr_save();
 
     /* Copy the bring up code to the BUA */
     bua = AP_BUA_VADDR;
