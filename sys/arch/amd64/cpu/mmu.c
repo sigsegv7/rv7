@@ -61,7 +61,6 @@ mu_pmap_readvas(struct mmu_vas *vas)
         : "memory"
     );
 
-    vas->cr3 &= PTE_ADDR_MASK;
     return 0;
 }
 
