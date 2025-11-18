@@ -30,8 +30,10 @@
 #ifndef _MACHINE_MSR_H_
 #define _MACHINE_MSR_H_ 1
 
+#if !defined(__ASSEMBLER__)
 #include <sys/cdefs.h>
 #include <sys/types.h>
+#endif  /* !__ASSEMBLER__ */
 
 #define IA32_APIC_BASE      0x0000001B
 #define IA32_GS_BASE        0xC0000101
@@ -41,6 +43,7 @@
 #define IA32_MTRR_PHYSMASK  0x00000201
 #define IA32_KERNEL_GS_BASE 0xC0000102
 
+#if !defined(__ASSEMBLER__)
 __always_inline static inline uint64_t
 rdmsr(uint32_t msr)
 {
@@ -72,4 +75,5 @@ wrmsr(uint32_t msr, uint64_t val)
     );
 }
 
+#endif  /* !__ASSEMBLER__ */
 #endif  /* !_MACHINE_MSR_H_ */
