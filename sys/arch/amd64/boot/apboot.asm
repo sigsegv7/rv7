@@ -35,6 +35,7 @@
 
 [bits 16]
 _start:
+    cli
     mov al, 0xFF                    ;; Mask i8259 inputs
     out 0x21, al                    ;; Disable master PIC
     out 0xA1, al                    ;; Disable slave PIC
