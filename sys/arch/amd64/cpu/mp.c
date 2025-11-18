@@ -27,6 +27,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <sys/atomic.h>
 #include <sys/types.h>
 #include <sys/cdefs.h>
 #include <sys/errno.h>
@@ -101,6 +102,7 @@ struct mtrr_save {
 
 static struct ap_bootspace bs;
 static volatile size_t ap_sync = 0;
+static volatile uint32_t ap_count = 0;
 __section(".trampoline") static char ap_code[4096];
 
 static void
@@ -263,6 +265,7 @@ cpu_lm_entry(void)
     );
 
     cpu_loinit();
+    atomic_inc_int(&ap_count);
     for (;;) {
         __asmv("cli; hlt");
     }
@@ -371,4 +374,10 @@ cpu_start_aps(struct cpu_info *ci)
         cpu_lapic_cb,
         lapic_read_id(mcb)
     );
+
+    if (ap_count == 0) {
+        dtrace("cpu only has a single core\n");
+    } else {
+        dtrace("%d processor(s) up\n", ap_count);
+    }
 }
