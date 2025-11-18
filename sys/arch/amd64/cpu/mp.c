@@ -146,7 +146,7 @@ cpu_init_bootspace(struct ap_bootspace *bs)
 
     /*
      * Now we link the tables up and identity map the
-     * first 4 pages
+     * first 2 megs
      */
     new_pml4[0] = bs->pml3 | 3;     /* P+RW */
     pml3[0] = bs->pml2     | 3;     /* P+RW */
