@@ -27,28 +27,24 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+#ifndef _VM_KALLOC_H_
+#define _VM_KALLOC_H_ 1
+
 #include <sys/types.h>
-#include <dev/cons/cons.h>
-#include <os/trace.h>
-#include <acpi/acpi.h>
-#include <mu/cpu.h>
-#include <vm/phys.h>
-#include <vm/vm.h>
-#include <vm/kalloc.h>
 
-struct cpu_info g_bsp;
-struct console g_bootcons;
-void kmain(void);
+/*
+ * Free memory allocated with kalloc()
+ */
+void kfree(void *ptr);
 
-void
-kmain(void)
-{
-    console_reset(&g_bootcons);
-    trace("bootcons: console online\n");
-    vm_phys_init();
-    vm_init();
-    acpi_init();
-    vm_kalloc_init();
-    cpu_conf(&g_bsp);
-    cpu_start_aps(&g_bsp);
-}
+/*
+ * Allocate a desired number of bytes
+ */
+void *kalloc(size_t sz);
+
+/*
+ * Initialize the kalloc() subsystem
+ */
+void vm_kalloc_init(void);
+
+#endif  /* !_VM_KALLOC_H_ */

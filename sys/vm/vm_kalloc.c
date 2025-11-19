@@ -27,28 +27,55 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <sys/types.h>
-#include <dev/cons/cons.h>
-#include <os/trace.h>
-#include <acpi/acpi.h>
-#include <mu/cpu.h>
-#include <vm/phys.h>
-#include <vm/vm.h>
+#include <kern/panic.h>
 #include <vm/kalloc.h>
+#include <vm/tlsf.h>
+#include <vm/phys.h>
+#include <mu/spinlock.h>
+#include <vm/vm.h>
 
-struct cpu_info g_bsp;
-struct console g_bootcons;
-void kmain(void);
+#define MEM_SIZE 0x200000
+
+/*
+ * XXX: This lock is shared globally, it might be a better
+ *      idea to move the whole context per core sometime
+ *      soon?
+ */
+static volatile size_t lock = 0;
+static tlsf_t ctx;
+
+void *
+kalloc(size_t sz)
+{
+    void *tmp;
+
+    mu_spinlock_acq(&lock, 0);
+    tmp = tlsf_malloc(ctx, sz);
+    mu_spinlock_rel(&lock, 0);
+    return tmp;
+}
 
 void
-kmain(void)
+kfree(void *ptr)
 {
-    console_reset(&g_bootcons);
-    trace("bootcons: console online\n");
-    vm_phys_init();
-    vm_init();
-    acpi_init();
-    vm_kalloc_init();
-    cpu_conf(&g_bsp);
-    cpu_start_aps(&g_bsp);
+    mu_spinlock_acq(&lock, 0);
+    tlsf_free(ctx, ptr);
+    mu_spinlock_rel(&lock, 0);
+}
+
+void
+vm_kalloc_init(void)
+{
+    uintptr_t phys, *virt;
+
+    phys = vm_phys_alloc(MEM_SIZE / 4096);
+    if (phys == 0) {
+        panic("kalloc: could not allocate pages\n");
+    }
+
+    virt = PHYS_TO_VIRT(phys);
+    ctx = tlsf_create_with_pool(virt, MEM_SIZE);
+    if (ctx == NULL) {
+        panic("kalloc: could not init context\n");
+    }
 }
