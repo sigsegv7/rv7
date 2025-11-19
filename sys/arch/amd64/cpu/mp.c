@@ -373,6 +373,12 @@ cpu_get(uint32_t index)
     return cpu_list[index];
 }
 
+size_t
+cpu_count(void)
+{
+    return ap_count + 1;
+}
+
 void
 cpu_start_aps(struct cpu_info *ci)
 {

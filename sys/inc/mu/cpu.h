@@ -56,6 +56,11 @@ struct cpu_info *cpu_self(void);
 struct cpu_info *cpu_get(uint32_t index);
 
 /*
+ * Get the number of processors
+ */
+size_t cpu_count(void);
+
+/*
  * Configure a processor core
  */
 void cpu_conf(struct cpu_info *ci);
