@@ -143,7 +143,9 @@ pmap_get_level(struct mmu_vas *vas, uintptr_t va, bool en_alloc, pagelevel_t lvl
     while ((curlvl--) > lvl) {
         index = pmap_get_index(va, curlvl);
         if (ISSET(pmap[index], PTE_P)) {
-            return PHYS_TO_VIRT(pmap[index] & PTE_ADDR_MASK);
+            pmap = PHYS_TO_VIRT(pmap[index] & PTE_ADDR_MASK);
+            --curlvl;
+            continue;
         }
 
         if (!en_alloc) {
