@@ -27,34 +27,13 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _SYS_TYPES_H_
-#define _SYS_TYPES_H_ 1
+#ifndef _SYS_LIMITS_H_
+#define _SYS_LIMITS_H_ 1
 
-#if defined(_KERNEL)
-#define NULL (void *)0
-#endif  /* !_KERNEL */
+#define PATH_MAX 1024
+#define NAME_MAX 256
+#define SSIZE_MAX 32767
+#define ARG_MAX 4096
+#define CHAR_BIT 8
 
-/* Unsigned types */
-typedef unsigned char       uint8_t;
-typedef unsigned short      uint16_t;
-typedef unsigned int        uint32_t;
-typedef unsigned long long  uint64_t;
-
-/* Signed types */
-typedef char       int8_t;
-typedef short      int16_t;
-typedef int        int32_t;
-typedef long long  int64_t;
-
-/* Size types */
-typedef uint64_t    size_t;
-typedef int64_t     ssize_t;
-typedef size_t      off_t;
-typedef size_t      uintptr_t;
-typedef ssize_t     ptrdiff_t;
-
-/* ID types */
-typedef int32_t     id_t;
-typedef id_t        pid_t;
-
-#endif  /* !_SYS_TYPES_H_ */
+#endif  /* !_SYS_LIMITS_H_ */

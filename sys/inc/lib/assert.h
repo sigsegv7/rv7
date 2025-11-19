@@ -27,34 +27,16 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _SYS_TYPES_H_
-#define _SYS_TYPES_H_ 1
+#ifndef _LIB_ASSERT_H_
+#define _LIB_ASSERT_H_
 
-#if defined(_KERNEL)
-#define NULL (void *)0
-#endif  /* !_KERNEL */
+#include <kern/panic.h>
+#include <sys/types.h>
 
-/* Unsigned types */
-typedef unsigned char       uint8_t;
-typedef unsigned short      uint16_t;
-typedef unsigned int        uint32_t;
-typedef unsigned long long  uint64_t;
+#define __assert(condition)                                         \
+    if ((uintptr_t)(condition) == 0) {                              \
+        panic("assert \"%s\" failed (%s() at %s:%d)\n", #condition, \
+              __func__, __FILE__, __LINE__);                        \
+    }
 
-/* Signed types */
-typedef char       int8_t;
-typedef short      int16_t;
-typedef int        int32_t;
-typedef long long  int64_t;
-
-/* Size types */
-typedef uint64_t    size_t;
-typedef int64_t     ssize_t;
-typedef size_t      off_t;
-typedef size_t      uintptr_t;
-typedef ssize_t     ptrdiff_t;
-
-/* ID types */
-typedef int32_t     id_t;
-typedef id_t        pid_t;
-
-#endif  /* !_SYS_TYPES_H_ */
+#endif  /* !_LIB_ASSERT_H_ */
