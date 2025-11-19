@@ -43,6 +43,9 @@
 #include <mu/cpu.h>
 #include <vm/vm.h>
 #include <vm/phys.h>
+#include <vm/kalloc.h>
+
+#define MAX_CPUS 256
 
 #define dtrace(fmt, ...) trace("mp: " fmt, ##__VA_ARGS__)
 
@@ -100,9 +103,11 @@ struct mtrr_save {
     uintptr_t physmask[256];
 } mtrr_save;
 
+static struct cpu_info *cpu_list[MAX_CPUS];
 static struct ap_bootspace bs;
 static volatile size_t ap_sync = 0;
-static volatile uint32_t ap_count = 0;
+static uint32_t ap_count = 0;
+static volatile uint32_t aps_up = 0;
 __section(".trampoline") static char ap_code[4096];
 
 static void
@@ -222,6 +227,8 @@ cpu_free_bootspace(struct ap_bootspace *bs)
 static void
 cpu_lm_entry(void)
 {
+    struct cpu_info *ci;
+
     /*
      * Put the processor in no cache fill mode so that we can safely
      * update MTRRs without worrying about the ground moving under
@@ -264,8 +271,18 @@ cpu_lm_entry(void)
         : "rax", "rbx"
     );
 
+    ci = kalloc(sizeof(*ci));
+    if (ci == NULL) {
+        panic("mp: could not allocate processor\n");
+    }
+
+    ci->id = aps_up + 1;
     cpu_loinit();
-    atomic_inc_int(&ap_count);
+    cpu_conf(ci);
+
+    atomic_inc_int(&aps_up);
+    cpu_list[aps_up] = ci;
+
     for (;;) {
         __asmv("cli; hlt");
     }
@@ -338,7 +355,22 @@ cpu_lapic_cb(struct apic_header *h, size_t arg)
     while (!buda->is_booted);
     buda->is_booted = 0;
 
+    /* Don't overflow */
+    if ((++ap_count) >= MAX_CPUS - 1) {
+        return 0;
+    }
+
     return -1;  /* Keep going */
+}
+
+struct cpu_info *
+cpu_get(uint32_t index)
+{
+    if (index >= aps_up + 1) {
+        return NULL;
+    }
+
+    return cpu_list[index];
 }
 
 void
@@ -358,6 +390,8 @@ cpu_start_aps(struct cpu_info *ci)
         panic("mp: could not get current processor\n");
     }
 
+    cpu_list[0] = ci;
+
     /* Initialize the bootspace */
     cpu_init_bootspace(&bs);
     cpu_mtrr_save();
@@ -375,9 +409,14 @@ cpu_start_aps(struct cpu_info *ci)
         lapic_read_id(mcb)
     );
 
-    if (ap_count == 0) {
+    /* Wait for all processors to be up */
+    while (aps_up < ap_count) {
+        __asmv("rep; nop");
+    }
+
+    if (aps_up == 0) {
         dtrace("cpu only has a single core\n");
     } else {
-        dtrace("%d processor(s) up\n", ap_count);
+        dtrace("%d processor(s) up\n", aps_up);
     }
 }

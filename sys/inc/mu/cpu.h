@@ -51,6 +51,11 @@ struct cpu_info {
 struct cpu_info *cpu_self(void);
 
 /*
+ * Get a processor by index
+ */
+struct cpu_info *cpu_get(uint32_t index);
+
+/*
  * Configure a processor core
  */
 void cpu_conf(struct cpu_info *ci);
