@@ -28,9 +28,9 @@
  */
 
 #include <kern/panic.h>
-#include <kern/serial.h>
 #include <mu/panic.h>
 #include <mu/spinlock.h>
+#include <os/trace.h>
 #include <lib/string.h>
 #include <lib/stdarg.h>
 #include <lib/stdbool.h>
@@ -48,9 +48,10 @@ panic(const char *fmt, ...)
     va_start(ap, fmt);
 
     vsnprintf(buf, sizeof(buf), fmt, ap);
-    serial_write("panic: ", 7);
-    serial_write(buf, strlen(buf));
+    trace("panic: ");
+    trace(buf);
 
+    mu_panic_dump();
     mu_panic_hcf();
     __builtin_unreachable();
 }

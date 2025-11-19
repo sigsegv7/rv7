@@ -33,6 +33,12 @@
 #include <sys/types.h>
 
 /*
+ * Used internally by the panic function to dump
+ * internal machine state.
+ */
+void mu_panic_dump(void);
+
+/*
  * Used internally by the panic function and implemented
  * per architecture to bring the system to a halt.
  */
