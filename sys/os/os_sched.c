@@ -27,42 +27,40 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _OS_PROCESS_H_
-#define _OS_PROCESS_H_ 1
-
-#include <sys/types.h>
-#include <sys/param.h>
 #include <sys/queue.h>
-#include <md/pcb.h>     /* shared */
+#include <os/sched.h>
+#include <os/trace.h>
+#include <mu/cpu.h>
 
-/* Flags for proc_init() */
-#define PROC_KERN BIT(0)     /* Kernel thread */
+struct cpu_info *
+sched_enqueue_proc(struct process *proc)
+{
+    struct cpu_info *core;
+    size_t ncpu, i;
 
-/*
- * Represents a running process on the
- * system
- *
- * @pid: Process ID
- * @affinity: Processor affinity
- * @pcb: Process control block
- * @link: Queue link
- */
-struct process {
-    pid_t pid;
-    id_t affinity;
-    struct pcb pcb;
-    TAILQ_ENTRY(process) link;
-};
+    if (proc == NULL) {
+        return NULL;
+    }
 
-/*
- * Initialize a process to a known state
- *
- * @process: Process to initialize
- * @ip: Instruction pointer to jump to
- * @flags: Optional flags
- *
- * Returns zero on success
- */
-int process_init(struct process *process, uintptr_t ip, int flags);
+    if (proc->affinity >= 0) {
+        if ((core = cpu_get(proc->affinity)) != NULL)
+            return core;
+    }
 
-#endif  /* !_OS_PROCESS_H_ */
+    /*
+     * Here, we derive the processor index by using the lower
+     * byte MOD the number of cores, this works best and most
+     * evenly when the PID assignment increments monotonically
+     * though could potentially work with random assignment, just
+     * more sporadic.
+     */
+    ncpu = cpu_count();
+    i = (proc->pid & 0xFF) % ncpu;
+    while ((core = cpu_get(i++)) == NULL) {
+        if (i > ncpu) {
+            i = 0;
+        }
+    }
+    TAILQ_INSERT_TAIL(&core->pqueue, proc, link);
+    return core;
+}

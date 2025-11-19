@@ -43,6 +43,7 @@ process_init(struct process *process, uintptr_t ip, int flags)
     }
 
     process->pid = next_pid;
+    process->affinity = -1;
     atomic_inc_64(&next_pid);
     mu_process_init(process, ip, flags);
     return 0;

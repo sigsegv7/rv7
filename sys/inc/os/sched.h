@@ -27,42 +27,17 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _OS_PROCESS_H_
-#define _OS_PROCESS_H_ 1
+#ifndef _OS_SCHED_H_
+#define _OS_SCHED_H_
 
 #include <sys/types.h>
-#include <sys/param.h>
-#include <sys/queue.h>
-#include <md/pcb.h>     /* shared */
-
-/* Flags for proc_init() */
-#define PROC_KERN BIT(0)     /* Kernel thread */
+#include <os/process.h>
+#include <mu/cpu.h>
 
 /*
- * Represents a running process on the
- * system
- *
- * @pid: Process ID
- * @affinity: Processor affinity
- * @pcb: Process control block
- * @link: Queue link
+ * Enqueue a process into a runqueue and return the processor
+ * now associated
  */
-struct process {
-    pid_t pid;
-    id_t affinity;
-    struct pcb pcb;
-    TAILQ_ENTRY(process) link;
-};
+struct cpu_info *sched_enqueue_proc(struct process *proc);
 
-/*
- * Initialize a process to a known state
- *
- * @process: Process to initialize
- * @ip: Instruction pointer to jump to
- * @flags: Optional flags
- *
- * Returns zero on success
- */
-int process_init(struct process *process, uintptr_t ip, int flags);
-
-#endif  /* !_OS_PROCESS_H_ */
+#endif  /* !_OS_SCHED_H_ */
