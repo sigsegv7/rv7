@@ -27,40 +27,23 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _OS_PROCESS_H_
-#define _OS_PROCESS_H_ 1
-
 #include <sys/types.h>
-#include <sys/param.h>
-#include <sys/queue.h>
-#include <md/pcb.h>     /* shared */
+#include <sys/atomic.h>
+#include <sys/errno.h>
+#include <os/process.h>
+#include <mu/process.h>
 
-/* Flags for proc_init() */
-#define PROC_KERN BIT(0)     /* Kernel thread */
+static size_t next_pid = 0;
 
-/*
- * Represents a running process on the
- * system
- *
- * @pid: Process ID
- * @pcb: Process control block
- * @link: Queue link
- */
-struct process {
-    pid_t pid;
-    struct pcb pcb;
-    TAILQ_ENTRY(process) link;
-};
+int
+process_init(struct process *process, uintptr_t ip, int flags)
+{
+    if (process == NULL) {
+        return -EINVAL;
+    }
 
-/*
- * Initialize a process to a known state
- *
- * @process: Process to initialize
- * @ip: Instruction pointer to jump to
- * @flags: Optional flags
- *
- * Returns zero on success
- */
-int process_init(struct process *process, uintptr_t ip, int flags);
-
-#endif  /* !_OS_PROCESS_H_ */
+    process->pid = next_pid;
+    atomic_inc_64(&next_pid);
+    mu_process_init(process, ip, flags);
+    return 0;
+}

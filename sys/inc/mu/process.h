@@ -27,40 +27,18 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _OS_PROCESS_H_
-#define _OS_PROCESS_H_ 1
+#ifndef _MU_PROCESS_H_
+#define _MU_PROCESS_H_
 
 #include <sys/types.h>
-#include <sys/param.h>
-#include <sys/queue.h>
-#include <md/pcb.h>     /* shared */
-
-/* Flags for proc_init() */
-#define PROC_KERN BIT(0)     /* Kernel thread */
+#include <os/process.h>
 
 /*
- * Represents a running process on the
- * system
- *
- * @pid: Process ID
- * @pcb: Process control block
- * @link: Queue link
- */
-struct process {
-    pid_t pid;
-    struct pcb pcb;
-    TAILQ_ENTRY(process) link;
-};
-
-/*
- * Initialize a process to a known state
+ * Initialize machine specific process fields
  *
  * @process: Process to initialize
- * @ip: Instruction pointer to jump to
- * @flags: Optional flags
- *
- * Returns zero on success
+ * @ip: Instruction pointer
  */
-int process_init(struct process *process, uintptr_t ip, int flags);
+int mu_process_init(struct process *process, uintptr_t ip, int flags);
 
-#endif  /* !_OS_PROCESS_H_ */
+#endif  /* !_MU_PROCESS_H_ */
