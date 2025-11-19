@@ -85,6 +85,20 @@ GDT:
     .byte 0b10010010
     .byte 0b00000000
     .byte 0x00
+.UCODE:
+    .word 0x0000
+    .word 0x0000
+    .byte 0x00
+    .byte 0b11111010
+    .byte 0b10101111
+    .byte 0x00
+.UDATA:
+    .word 0x0000
+    .word 0x0000
+    .byte 0x00
+    .byte 0b11110010
+    .byte 0b00000000
+    .byte 0x00
 
     .globl GDTR
 GDTR:
