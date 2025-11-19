@@ -65,11 +65,26 @@ gdt_load:
     .globl GDT
 GDT:
 .NULL:
-    .quad 0x0000000000000000
+    .word 0x0000
+    .word 0x0000
+    .byte 0x00
+    .byte 0b00000000
+    .byte 0b00000000
+    .byte 0x00
 .CODE:
-    .quad 0x00209A0000000000
+    .word 0x0000
+    .word 0x0000
+    .byte 0x00
+    .byte 0b10011010
+    .byte 0b00100000
+    .byte 0x00
 .DATA:
-    .quad 0x0000920000000000
+    .word 0x0000
+    .word 0x0000
+    .byte 0x00
+    .byte 0b10010010
+    .byte 0b00000000
+    .byte 0x00
 
     .globl GDTR
 GDTR:
