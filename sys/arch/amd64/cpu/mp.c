@@ -41,6 +41,8 @@
 #include <md/msr.h>
 #include <md/cpu.h>
 #include <mu/cpu.h>
+#include <os/process.h>
+#include <os/sched.h>
 #include <vm/vm.h>
 #include <vm/phys.h>
 #include <vm/kalloc.h>
@@ -370,6 +372,28 @@ cpu_lapic_cb(struct apic_header *h, size_t arg)
     return -1;  /* Keep going */
 }
 
+static void
+cpu_start_idle(void)
+{
+    struct process *p;
+    int error;
+
+    for (size_t i = 0; i < ap_count; ++i) {
+        p = kalloc(sizeof(*p));
+        if (p == NULL) {
+            panic("mp: could not allocate idle thread\n");
+        }
+
+        /* Initialize the process */
+        error = process_init(p, (uintptr_t)cpu_idle, PROC_KERN);
+        if (error < 0) {
+            panic("mp: could not initialize process\n");
+        }
+
+        sched_enqueue_proc(p);
+    }
+}
+
 struct cpu_info *
 cpu_get(uint32_t index)
 {
@@ -432,4 +456,6 @@ cpu_start_aps(struct cpu_info *ci)
     } else {
         dtrace("%d processor(s) up\n", aps_up);
     }
+
+    cpu_start_idle();
 }
