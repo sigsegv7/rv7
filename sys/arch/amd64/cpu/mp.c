@@ -111,6 +111,14 @@ static volatile uint32_t aps_up = 0;
 __section(".trampoline") static char ap_code[4096];
 
 static void
+cpu_idle(void)
+{
+    for (;;) {
+        __asmv("hlt");
+    }
+}
+
+static void
 cpu_mtrr_save(void)
 {
     uint64_t mtrr_cap;
@@ -283,9 +291,8 @@ cpu_lm_entry(void)
     atomic_inc_int(&aps_up);
     cpu_list[aps_up] = ci;
 
-    for (;;) {
-        __asmv("cli; hlt");
-    }
+    cpu_idle();
+    __builtin_unreachable();
 }
 
 static int
