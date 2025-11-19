@@ -239,6 +239,7 @@ mu_pmap_forkvas(struct mmu_vas *result)
         }
     }
 
+    result->cr3 = paddr;
     return 0;
 }
 
