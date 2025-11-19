@@ -30,7 +30,9 @@
 #ifndef _MU_CPU_H_
 #define _MU_CPU_H_ 1
 
+#include <sys/queue.h>
 #include <sys/types.h>
+#include <os/process.h>
 #include <md/mcb.h>
 
 /*
@@ -38,10 +40,14 @@
  *
  * @id: Logical ID of the processor
  * @mcb: Machine core block
+ * @curproc: Current process
+ * @pqueue: Process queue
  */
 struct cpu_info {
     uint8_t id;
     struct mcb mcb;
+    struct process *curproc;
+    TAILQ_HEAD(, process) pqueue;
 };
 
 /*

@@ -51,4 +51,5 @@ cpu_conf(struct cpu_info *ci)
 {
     wrmsr(IA32_GS_BASE, (uintptr_t)ci);
     lapic_init();
+    TAILQ_INIT(&ci->pqueue);
 }
