@@ -62,6 +62,7 @@
 #define LAPIC_REG_TCCR      0x0390       /* Timer current counter register */
 #define LAPIC_REG_TDCR      0x03E0       /* Timer divide configuration register */
 #define LAPIC_REG_LVTTMR    0x0320       /* LVT timer entry */
+#define LAPIC_REG_EOI       0x00B0
 #define LAPIC_REG_ICRLO     0x0300U      /* Interrupt Command Low Register */
 #define LAPIC_REG_ICRHI     0x0310U      /* Interrupt Command High Register */
 
@@ -370,6 +371,12 @@ lapic_oneshot_usec(struct mcb *mcb, size_t usec)
     }
 
     lapic_timer_oneshot(mcb, mcb->lapic_tmr_freq / 1000000);
+}
+
+void
+lapic_eoi(struct mcb *mcb)
+{
+    lapic_write(mcb, LAPIC_REG_EOI, 0);
 }
 
 void

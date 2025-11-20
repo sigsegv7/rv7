@@ -98,6 +98,11 @@ struct lapic_ipi {
 void lapic_oneshot_usec(struct mcb *mcb, size_t usec);
 
 /*
+ * Send an end-of-interrupt
+ */
+void lapic_eoi(struct mcb *mcb);
+
+/*
  * Read the current local APIC id
  */
 uint32_t lapic_read_id(struct mcb *mcb);
