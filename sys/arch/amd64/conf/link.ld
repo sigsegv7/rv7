@@ -33,6 +33,10 @@ SECTIONS
         *(.data)
     } :data
 
+    .cacheline_aligned : ALIGN(64) {
+        *(.cacheline_aligned)
+    }
+
     .bss : {
         *(COMMON)
         *(.bss .bss.*)

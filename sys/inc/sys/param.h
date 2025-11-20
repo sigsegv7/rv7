@@ -32,6 +32,11 @@
 
 #include <sys/types.h>
 
+/* XXX: Should be arch overridable */
+#if !defined(COHERENCY_UNIT)
+#define COHERENCY_UNIT 64
+#endif  /* !COHERENCY_UNIT */
+
 /* Bit related macros */
 #define ISSET(v, f)  ((v) & (f))
 #define BIT(n) (1ULL << (n))

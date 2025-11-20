@@ -30,6 +30,8 @@
 #ifndef _SYS_CDEFS_H_
 #define _SYS_CDEFS_H_ 1
 
+#include <sys/param.h>
+
 #define __asmv          __asm__ __volatile__
 #define __weak          __attribute__((__weak__))
 #define __strong        __attribute__((__strong__))
@@ -47,5 +49,9 @@
 #define __unlikely(exp) __builtin_expect(((exp) != 0), 0)
 #define __barrier()     __asmv("" ::: "memory")
 #define __static_assert _Static_assert
+
+#define __cacheline_aligned             \
+    __aligned(COHERENCY_UNIT)           \
+    __section(".cacheline_aligned")
 
 #endif  /* !_SYS_CDEFS_H_ */
