@@ -64,3 +64,21 @@ sched_enqueue_proc(struct process *proc)
     TAILQ_INSERT_TAIL(&core->pqueue, proc, link);
     return core;
 }
+
+struct process *
+sched_dequeue_proc(void)
+{
+    struct cpu_info *core;
+    struct process *proc;
+
+    core = cpu_self();
+    if (core == NULL) {
+        return NULL;
+    }
+
+    proc = TAILQ_FIRST(&core->pqueue);
+    if (proc != NULL) {
+        TAILQ_REMOVE(&core->pqueue, proc, link);
+    }
+    return proc;
+}

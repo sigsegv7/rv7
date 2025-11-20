@@ -42,4 +42,9 @@
  */
 struct cpu_info *sched_enqueue_proc(struct process *proc);
 
+/*
+ * Dequeue a process from the current core
+ */
+struct process *sched_dequeue_proc(void);
+
 #endif  /* !_OS_SCHED_H_ */
