@@ -34,6 +34,8 @@
 #include <os/process.h>
 #include <mu/cpu.h>
 
+#define SCHED_QUANTUM 9000  /* In usec */
+
 /*
  * Enqueue a process into a runqueue and return the processor
  * now associated
