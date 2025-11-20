@@ -488,4 +488,7 @@ cpu_start_aps(struct cpu_info *ci)
     } else {
         dtrace("%d processor(s) up\n", aps_up);
     }
+
+    cpu_free_bootspace(&bs);
+
 }
