@@ -95,5 +95,8 @@ mu_process_init(struct process *process, uintptr_t ip, int flags)
     }
 
     tf->rsp = ALIGN_DOWN(STACK_TOP + (PAGESIZE - 1), 16);
+    if (ISSET(flags, PROC_KERN)) {
+        tf->rsp += KERN_BASE;
+    }
     return 0;
 }
