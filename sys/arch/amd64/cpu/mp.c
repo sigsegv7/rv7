@@ -42,6 +42,7 @@
 #include <md/cpu.h>
 #include <md/gdt.h>
 #include <mu/cpu.h>
+#include <mu/mmu.h>
 #include <os/process.h>
 #include <os/sched.h>
 #include <vm/vm.h>
@@ -115,6 +116,16 @@ static volatile size_t ap_sync = 0;
 static uint32_t ap_count = 0;
 static volatile uint32_t aps_up = 0;
 __section(".trampoline") static char ap_code[4096];
+
+static void
+clean_addrsp(void)
+{
+    struct mmu_vas old, new;
+
+    mu_pmap_readvas(&old);
+    mu_pmap_forkvas(&new);
+    mu_pmap_writevas(&new);
+}
 
 static void
 cpu_idle(struct mcb *mcb)
@@ -271,6 +282,7 @@ cpu_lm_entry(void)
     );
 
     cpu_mtrr_fetch();
+    clean_addrsp();
 
     /*
      * Now we load all the MTRRs given to us by the BSP
