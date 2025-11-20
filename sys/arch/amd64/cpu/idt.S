@@ -309,9 +309,12 @@ page_fault:
     .globl lapic_tmr_isr
 lapic_tmr_isr:
     KFENCE
+    subq $8, %rsp
     push_frame 0x81
-    nop
+    mov %rsp, %rdi
+    call mu_process_switch
     pop_frame 0x81
+    add $8, %rsp
     KFENCE
     iretq
 

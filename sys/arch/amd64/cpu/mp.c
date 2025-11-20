@@ -40,6 +40,7 @@
 #include <md/lapic.h>
 #include <md/msr.h>
 #include <md/cpu.h>
+#include <md/gdt.h>
 #include <mu/cpu.h>
 #include <os/process.h>
 #include <os/sched.h>
@@ -116,10 +117,11 @@ static volatile uint32_t aps_up = 0;
 __section(".trampoline") static char ap_code[4096];
 
 static void
-cpu_idle(void)
+cpu_idle(struct mcb *mcb)
 {
+    lapic_oneshot_usec(mcb, SCHED_QUANTUM);
     for (;;) {
-        __asmv("hlt");
+        __asmv("sti; hlt");
     }
 }
 
@@ -308,7 +310,7 @@ cpu_lm_entry(void)
     );
 
     idt_load();
-    cpu_idle();
+    cpu_idle(&ci->mcb);
     __builtin_unreachable();
 }
 
@@ -391,9 +393,10 @@ static void
 cpu_start_idle(void)
 {
     struct process *p;
+    struct cpu_info *core;
     int error;
 
-    for (size_t i = 0; i < ap_count; ++i) {
+    for (size_t i = 0; i < ap_count + 1; ++i) {
         p = kalloc(sizeof(*p));
         if (p == NULL) {
             panic("mp: could not allocate idle thread\n");
@@ -405,7 +408,8 @@ cpu_start_idle(void)
             panic("mp: could not initialize process\n");
         }
 
-        sched_enqueue_proc(p);
+        core = sched_enqueue_proc(p);
+        core->curproc = NULL;
     }
 }
 
@@ -451,6 +455,7 @@ cpu_start_aps(struct cpu_info *ci)
     /* Copy the bring up code to the BUA */
     bua = AP_BUA_VADDR;
     memcpy(bua, ap_code, AP_BUA_LEN);
+    cpu_start_idle();
 
     /* Start up the APs */
     mcb = &self->mcb;
@@ -471,6 +476,4 @@ cpu_start_aps(struct cpu_info *ci)
     } else {
         dtrace("%d processor(s) up\n", aps_up);
     }
-
-    cpu_start_idle();
 }

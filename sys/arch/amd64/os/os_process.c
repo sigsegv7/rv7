@@ -30,11 +30,64 @@
 #include <sys/errno.h>
 #include <mu/process.h>
 #include <mu/mmu.h>
+#include <mu/cpu.h>
+#include <md/gdt.h>
+#include <md/lapic.h>
+#include <os/process.h>
+#include <os/sched.h>
 #include <vm/phys.h>
+#include <vm/vm.h>
 #include <lib/string.h>
 
 #define STACK_TOP 0xBFFFFFFF
 
+static void
+sched_enter(struct cpu_info *ci)
+{
+    lapic_oneshot_usec(&ci->mcb, SCHED_QUANTUM);
+    for (;;) {
+        __asmv("sti; hlt");
+    }
+}
+
+void
+mu_process_switch(struct trapframe *tf)
+{
+    struct cpu_info *ci = cpu_self();
+    struct process *self, *next;
+    struct pcb *pcb;
+
+    if (ci == NULL) {
+        goto done;
+    }
+
+    if ((self = ci->curproc) == NULL) {
+        ci->curproc = sched_dequeue_proc();
+        goto done;
+    }
+
+    /* Save current process */
+    sched_enqueue_proc(self);
+    pcb = &self->pcb;
+    memcpy(&pcb->tf, tf, sizeof(pcb->tf));
+
+    /* Get the next process */
+    next = sched_dequeue_proc();
+    if (next == NULL) {
+        sched_enter(ci);
+    }
+
+    /* Switch to the next process */
+    pcb = &next->pcb;
+    memcpy(tf, &pcb->tf, sizeof(*tf));
+    ci->curproc = next;
+
+    /* Switch address space and go */
+    mu_pmap_writevas(&pcb->vas);
+done:
+    lapic_eoi(&ci->mcb);
+    lapic_oneshot_usec(&ci->mcb, SCHED_QUANTUM);
+}
 
 int
 mu_process_init(struct process *process, uintptr_t ip, int flags)

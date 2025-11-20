@@ -32,6 +32,7 @@
 
 #include <sys/types.h>
 #include <os/process.h>
+#include <md/frame.h>       /* shared */
 
 /*
  * Initialize machine specific process fields
@@ -40,5 +41,12 @@
  * @ip: Instruction pointer
  */
 int mu_process_init(struct process *process, uintptr_t ip, int flags);
+
+/*
+ * Context switch to the next process
+ *
+ * @tf: Trapframe
+ */
+void mu_process_switch(struct trapframe *tf);
 
 #endif  /* !_MU_PROCESS_H_ */
