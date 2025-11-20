@@ -33,7 +33,8 @@
 #include <sys/queue.h>
 #include <sys/types.h>
 #include <os/process.h>
-#include <md/mcb.h>
+#include <md/mcb.h> /* shared */
+#include <md/gdt.h> /* shared */
 
 /*
  * Processor descriptor
@@ -41,12 +42,16 @@
  * @id: Logical ID of the processor
  * @mcb: Machine core block
  * @curproc: Current process
+ * @ap_gdt: GDT for APs [unused for BSP]
+ * @ap_gdtr: GDTR for APs [unused for BSP]
  * @pqueue: Process queue
  */
 struct cpu_info {
     uint8_t id;
     struct mcb mcb;
     struct process *curproc;
+    struct gdt_entry ap_gdt[256];
+    struct gdtr ap_gdtr;
     TAILQ_HEAD(, process) pqueue;
 };
 

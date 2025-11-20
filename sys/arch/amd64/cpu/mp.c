@@ -105,6 +105,9 @@ struct mtrr_save {
     uintptr_t physmask[256];
 } mtrr_save;
 
+extern struct gdtr GDTR;
+extern void idt_load(void);
+
 static struct cpu_info *cpu_list[MAX_CPUS];
 static struct ap_bootspace bs;
 static volatile size_t ap_sync = 0;
@@ -293,6 +296,18 @@ cpu_lm_entry(void)
     atomic_inc_int(&aps_up);
     cpu_list[aps_up] = ci;
 
+    /* Initialize the GDT */
+    memcpy(ci->ap_gdt, (void *)GDTR.offset, GDTR.limit);
+    ci->ap_gdtr.offset = (uintptr_t)&ci->ap_gdt[0];
+    ci->ap_gdtr.limit = GDTR.limit;
+    __asmv(
+        "lgdt %0"
+        :
+        : "m" (ci->ap_gdtr)
+        : "memory"
+    );
+
+    idt_load();
     cpu_idle();
     __builtin_unreachable();
 }

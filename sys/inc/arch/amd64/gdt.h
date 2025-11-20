@@ -30,9 +30,26 @@
 #ifndef _MACHINE_GDT_H_
 #define _MACHINE_GDT_H_
 
+#include <sys/types.h>
+#include <sys/cdefs.h>
+
 #define GDT_KERNCODE 0x08
 #define GDT_KERNDATA 0x10
 #define GDT_USERCODE 0x18
 #define GDT_USERDATA 0x20
+
+struct __packed gdt_entry {
+    uint16_t limit;
+    uint16_t base_low;
+    uint8_t base_mid;
+    uint8_t access;
+    uint8_t granularity;
+    uint8_t base_hi;
+};
+
+struct __packed gdtr {
+    uint16_t limit;
+    uintptr_t offset;
+};
 
 #endif  /* !_MACHINE_GDT_H_ */
