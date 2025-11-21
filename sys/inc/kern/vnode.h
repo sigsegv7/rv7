@@ -45,9 +45,9 @@ typedef enum {
 } vtype_t;
 
 /*
- * Arguments for the read() operation
+ * Arguments for buffer operations
  */
-struct vop_read_args {
+struct vop_buf_args {
     void *buffer;
     off_t offset;
     size_t len;
@@ -57,8 +57,8 @@ struct vop_read_args {
  * Operations that can be performed on a vnode
  */
 struct vops {
-    ssize_t(*read)(struct vop_read_args *args);
-    ssize_t(*write)(struct vop_read_args *args);
+    ssize_t(*read)(struct vop_buf_args *args);
+    ssize_t(*write)(struct vop_buf_args *args);
     void(*reclaim)(struct vnode *vp);
 };
 
