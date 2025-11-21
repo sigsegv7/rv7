@@ -321,7 +321,7 @@ lapic_tmr_isr:
     .section .data
     .align 8
 IDT:
-    .fill 256, 8, 512
+    .fill 4096, 1, 0
 IDTR:
 limit:
     .word 0xFFF
