@@ -54,11 +54,23 @@ struct vop_buf_args {
 };
 
 /*
+ * Arguments for lookup() vop
+ *
+ * @component: Path component to lookup
+ * @vp_res: Resulting vnode pointer
+ */
+struct vop_lookup_args {
+    const char *component;
+    struct vnode **vp_res;
+};
+
+/*
  * Operations that can be performed on a vnode
  */
 struct vops {
     ssize_t(*read)(struct vop_buf_args *args);
     ssize_t(*write)(struct vop_buf_args *args);
+    int(*lookup)(struct vop_lookup_args *args);
     void(*reclaim)(struct vnode *vp);
 };
 
@@ -89,6 +101,17 @@ struct vnode {
  * Returns the number of bytes read
  */
 ssize_t vnode_read(struct vnode *vp, void *buf, size_t size, off_t off);
+
+/*
+ * Lookup a sub-node within a vnode by name
+ *
+ * @vp: Vnode to scan within
+ * @name: Name to lookup
+ * @res: Result pointer is written here
+ *
+ * Returns zero on success
+ */
+int vnode_lookup(struct vnode *vp, const char *name, struct vnode **res);
 
 /*
  * Write data into a file described by a vnode

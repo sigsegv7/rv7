@@ -139,3 +139,27 @@ vnode_write(struct vnode *vp, const void *buf, size_t size, off_t off)
     args.offset = off;
     return vops->write(&args);
 }
+
+int
+vnode_lookup(struct vnode *vp, const char *name, struct vnode **res)
+{
+    struct vop_lookup_args args;
+    struct vops *vops;
+
+    if (vp == NULL || name == NULL) {
+        return -EINVAL;
+    }
+
+    if (res == NULL) {
+        return -EINVAL;
+    }
+
+    vops = &vp->vops;
+    if (vops->lookup == NULL) {
+        return -ENOTSUP;
+    }
+
+    args.component = name;
+    args.vp_res = res;
+    return vops->lookup(&args);
+}
