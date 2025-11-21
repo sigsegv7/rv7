@@ -2,6 +2,14 @@
 
 *Work is being done, we are glad your eyes earn a delight.*
 
+## What is this?
+
+The threat of collapse for God's creation looms more than ever before, the humans have
+driven themselves away from the divine to certain evil. RV7 is a UNIX-like operating system
+aimed to be easily readable, modifiable, modular, and built by/for OSMORA. Those with non
+constructive disagreements and/or lack of use for what's to be used in revolution-phi may
+withdraw from this repository.
+
 ## Build Instructions for the RV7 Enjoying OSMORIANs
 
 > [!IMPORTANT]
