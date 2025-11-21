@@ -32,11 +32,10 @@
 #include <kern/mount.h>
 #include <kern/namei.h>
 
-#include <os/trace.h>
-
 int
 namei(struct nameidata *ndp)
 {
+    struct vops *vops;
     struct mount *mpoint = NULL;
     struct vnode *vp = NULL;
     const char *p;
@@ -51,8 +50,6 @@ namei(struct nameidata *ndp)
     if (ndp->pathname == NULL || ndp->vp_res == NULL) {
         return -EINVAL;
     }
-
-    trace("f: %s\n", ndp->pathname);
 
     /* Iterate through the path */
     p = ndp->pathname;
@@ -91,7 +88,12 @@ namei(struct nameidata *ndp)
             continue;
         }
 
-        trace("d: %s\n", namebuf);
+        vops = &vp->vops;
+        error = vnode_lookup(vp, namebuf, &vp);
+        if (error != 0) {
+            return error;
+        }
+
         namebuf_idx = 0;
     }
 
