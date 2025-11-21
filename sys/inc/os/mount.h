@@ -93,4 +93,14 @@ struct mount {
  */
 int mount(struct mount_args *margs);
 
+/*
+ * Lookup an entry within the mount table
+ *
+ * @name: Name to lookup
+ * @mres: Result pointer is written here
+ *
+ * Returns zero on success
+ */
+int mount_lookup(const char *name, struct mount **mres);
+
 #endif  /* !_OS_MOUNT_H_ */

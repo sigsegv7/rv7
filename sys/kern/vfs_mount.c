@@ -35,6 +35,7 @@
 #include <os/mount.h>
 #include <kern/vfs.h>
 #include <lib/stdbool.h>
+#include <lib/string.h>
 #include <vm/kalloc.h>
 
 /*
@@ -112,5 +113,42 @@ mount(struct mount_args *margs)
     spinlock_acquire(&mount_lock, false);
     TAILQ_INSERT_TAIL(&mountlist, mp, link);
     spinlock_release(&mount_lock, false);
+    return 0;
+}
+
+/*
+ * XXX: Currently we are looking up entries by the fstype.
+ *      This must be updated to actual name-based lookups
+ *      in future revisions of rv7
+ */
+int
+mount_lookup(const char *name, struct mount **mres)
+{
+    struct fs_info *fip;
+    struct mount *iter, *mount = NULL;
+
+    if (name == NULL || mres == NULL) {
+        return -EINVAL;
+    }
+
+    spinlock_acquire(&mount_lock, false);
+    TAILQ_FOREACH(iter, &mountlist, link) {
+        fip = iter->fip;
+        if (__likely(*name != *fip->name)) {
+            continue;
+        }
+
+        if (strcmp(fip->name, name) == 0) {
+            mount = iter;
+            break;
+        }
+    }
+
+    spinlock_release(&mount_lock, false);
+    if (mount == NULL) {
+        return -ENOENT;
+    }
+
+    *mres = mount;
     return 0;
 }
