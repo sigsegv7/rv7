@@ -28,7 +28,7 @@
  */
 
 #include <sys/errno.h>
-#include <os/vnode.h>
+#include <kern/vnode.h>
 #include <vm/kalloc.h>
 #include <lib/string.h>
 

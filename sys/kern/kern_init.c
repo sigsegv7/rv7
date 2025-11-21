@@ -31,7 +31,7 @@
 #include <dev/cons/cons.h>
 #include <os/trace.h>
 #include <os/sched.h>
-#include <os/vfs.h>
+#include <kern/vfs.h>
 #include <acpi/acpi.h>
 #include <mu/cpu.h>
 #include <vm/phys.h>

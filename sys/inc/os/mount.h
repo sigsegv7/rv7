@@ -32,7 +32,7 @@
 
 #include <sys/types.h>
 #include <sys/queue.h>
-#include <os/vnode.h>
+#include <kern/vnode.h>
 
 /* Filesystem names */
 #define MOUNT_TMPFS "tmpfs"

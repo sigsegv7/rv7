@@ -33,7 +33,7 @@
 #include <kern/spinlock.h>
 #include <kern/panic.h>
 #include <os/mount.h>
-#include <os/vfs.h>
+#include <kern/vfs.h>
 #include <lib/stdbool.h>
 #include <vm/kalloc.h>
 
