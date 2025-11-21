@@ -30,7 +30,7 @@
 #ifndef _OS_VFS_H_
 #define _OS_VFS_H_ 1
 
-#include <os/mount.h>
+#include <kern/mount.h>
 
 /*
  * Initialize the virtual file system

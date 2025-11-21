@@ -32,7 +32,7 @@
 #include <sys/param.h>
 #include <kern/spinlock.h>
 #include <kern/panic.h>
-#include <os/mount.h>
+#include <kern/mount.h>
 #include <kern/vfs.h>
 #include <lib/stdbool.h>
 #include <lib/string.h>

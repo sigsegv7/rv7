@@ -30,7 +30,7 @@
 #ifndef _FS_TMPFS_H_
 #define _FS_TMPFS_H_
 
-#include <os/mount.h>
+#include <kern/mount.h>
 
 extern struct vfsops g_tmpfs_ops;
 

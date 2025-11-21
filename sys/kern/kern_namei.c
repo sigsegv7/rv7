@@ -29,7 +29,7 @@
 
 #include <sys/errno.h>
 #include <sys/limits.h>
-#include <os/mount.h>
+#include <kern/mount.h>
 #include <kern/namei.h>
 
 #include <os/trace.h>

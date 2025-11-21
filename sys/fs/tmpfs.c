@@ -27,7 +27,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <os/mount.h>
+#include <kern/mount.h>
 #include <fs/tmpfs.h>
 
 /*

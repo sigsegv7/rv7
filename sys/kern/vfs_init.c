@@ -34,7 +34,7 @@
 #include <lib/string.h>
 #include <fs/tmpfs.h>
 #include <kern/vfs.h>
-#include <os/mount.h>
+#include <kern/mount.h>
 #include <os/trace.h>
 
 #define dtrace(fmt, ...) trace("vfs: " fmt, ##__VA_ARGS__)
