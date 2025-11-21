@@ -27,31 +27,28 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <sys/types.h>
-#include <dev/cons/cons.h>
-#include <os/trace.h>
-#include <os/sched.h>
-#include <os/vfs.h>
-#include <acpi/acpi.h>
-#include <mu/cpu.h>
-#include <vm/phys.h>
-#include <vm/vm.h>
-#include <vm/kalloc.h>
+#include <os/mount.h>
+#include <fs/tmpfs.h>
 
-struct cpu_info g_bsp;
-struct console g_bootcons;
-void kmain(void);
-
-void
-kmain(void)
+/*
+ * Mount a filesystem
+ */
+static int
+tmpfs_mount(struct fs_info *fip, void *data)
 {
-    console_reset(&g_bootcons);
-    trace("bootcons: console online\n");
-    vm_phys_init();
-    vm_init();
-    acpi_init();
-    vm_kalloc_init();
-    cpu_conf(&g_bsp);
-    vfs_init();
-    cpu_start_aps(&g_bsp);
+    struct mount_args mountargs;
+    int error;
+
+    mountargs.target = "/tmp";
+    mountargs.fstype = MOUNT_TMPFS;
+    error = mount(&mountargs);
+    if (error < 0) {
+        return error;
+    }
+
+    return 0;
 }
+
+struct vfsops g_tmpfs_ops = {
+    .mount = tmpfs_mount
+};

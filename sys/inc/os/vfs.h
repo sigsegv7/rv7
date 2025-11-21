@@ -27,31 +27,23 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <sys/types.h>
-#include <dev/cons/cons.h>
-#include <os/trace.h>
-#include <os/sched.h>
-#include <os/vfs.h>
-#include <acpi/acpi.h>
-#include <mu/cpu.h>
-#include <vm/phys.h>
-#include <vm/vm.h>
-#include <vm/kalloc.h>
+#ifndef _OS_VFS_H_
+#define _OS_VFS_H_ 1
 
-struct cpu_info g_bsp;
-struct console g_bootcons;
-void kmain(void);
+#include <os/mount.h>
 
-void
-kmain(void)
-{
-    console_reset(&g_bootcons);
-    trace("bootcons: console online\n");
-    vm_phys_init();
-    vm_init();
-    acpi_init();
-    vm_kalloc_init();
-    cpu_conf(&g_bsp);
-    vfs_init();
-    cpu_start_aps(&g_bsp);
-}
+/*
+ * Initialize the virtual file system
+ */
+void vfs_init(void);
+
+/*
+ * Get a file system information descriptor
+ * by name
+ *
+ * @name: Name to lookup
+ * @res: Result pointer is written here
+ */
+int vfs_byname(const char *name, struct fs_info **res);
+
+#endif  /* _!OS_VFS_H_ */

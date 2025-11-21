@@ -27,31 +27,70 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+#ifndef _OS_MOUNT_H_
+#define _OS_MOUNT_H_ 1
+
 #include <sys/types.h>
-#include <dev/cons/cons.h>
-#include <os/trace.h>
-#include <os/sched.h>
-#include <os/vfs.h>
-#include <acpi/acpi.h>
-#include <mu/cpu.h>
-#include <vm/phys.h>
-#include <vm/vm.h>
-#include <vm/kalloc.h>
+#include <sys/queue.h>
+#include <os/vnode.h>
 
-struct cpu_info g_bsp;
-struct console g_bootcons;
-void kmain(void);
+/* Filesystem names */
+#define MOUNT_TMPFS "tmpfs"
 
-void
-kmain(void)
-{
-    console_reset(&g_bootcons);
-    trace("bootcons: console online\n");
-    vm_phys_init();
-    vm_init();
-    acpi_init();
-    vm_kalloc_init();
-    cpu_conf(&g_bsp);
-    vfs_init();
-    cpu_start_aps(&g_bsp);
-}
+struct fs_info;
+
+/*
+ * Represents arguments passed to mount()
+ */
+struct mount_args {
+    const char *source;
+    const char *target;
+    const char *fstype;
+    uint32_t flags;
+    void *data;
+};
+
+/*
+ * Represents VFS operations that can be performed
+ * on filesystem objects
+ */
+struct vfsops {
+    int(*mount)(struct fs_info *fip, void *data);
+};
+
+/*
+ * Represents filesystem operation
+ *
+ * @name: Name of filesystem
+ * @vfsops: Represents operations that can be performed
+ * @is_mounted: Set if filesystem is mounted
+ */
+struct fs_info {
+    char *name;
+    struct vfsops *vfsops;
+    uint8_t is_mounted : 1;
+};
+
+/*
+ * Represents a mountpoint
+ *
+ * @fip: Target filesystem interface
+ * @vp: Vnode pointer length
+ * @link: Connects mountpoints
+ */
+struct mount {
+    struct fs_info *fip;
+    struct vnode *vp;
+    TAILQ_ENTRY(mount) link;
+};
+
+/*
+ * Mount a filesystem and make it visible for access
+ *
+ * @margs: Mount arguments
+ *
+ * Returns zero on success
+ */
+int mount(struct mount_args *margs);
+
+#endif  /* !_OS_MOUNT_H_ */

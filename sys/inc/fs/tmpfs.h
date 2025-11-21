@@ -27,31 +27,11 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <sys/types.h>
-#include <dev/cons/cons.h>
-#include <os/trace.h>
-#include <os/sched.h>
-#include <os/vfs.h>
-#include <acpi/acpi.h>
-#include <mu/cpu.h>
-#include <vm/phys.h>
-#include <vm/vm.h>
-#include <vm/kalloc.h>
+#ifndef _FS_TMPFS_H_
+#define _FS_TMPFS_H_
 
-struct cpu_info g_bsp;
-struct console g_bootcons;
-void kmain(void);
+#include <os/mount.h>
 
-void
-kmain(void)
-{
-    console_reset(&g_bootcons);
-    trace("bootcons: console online\n");
-    vm_phys_init();
-    vm_init();
-    acpi_init();
-    vm_kalloc_init();
-    cpu_conf(&g_bsp);
-    vfs_init();
-    cpu_start_aps(&g_bsp);
-}
+extern struct vfsops g_tmpfs_ops;
+
+#endif  /* !_FS_TMPFS_H_ */

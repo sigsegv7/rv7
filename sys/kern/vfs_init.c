@@ -28,30 +28,81 @@
  */
 
 #include <sys/types.h>
-#include <dev/cons/cons.h>
+#include <sys/errno.h>
+#include <sys/param.h>
+#include <sys/cdefs.h>
+#include <lib/string.h>
+#include <fs/tmpfs.h>
+#include <os/mount.h>
 #include <os/trace.h>
-#include <os/sched.h>
 #include <os/vfs.h>
-#include <acpi/acpi.h>
-#include <mu/cpu.h>
-#include <vm/phys.h>
-#include <vm/vm.h>
-#include <vm/kalloc.h>
 
-struct cpu_info g_bsp;
-struct console g_bootcons;
-void kmain(void);
+#define dtrace(fmt, ...) trace("vfs: " fmt, ##__VA_ARGS__)
+
+static uint16_t fs_count = 0;
+static struct fs_info fs_list[] = {
+    { MOUNT_TMPFS, &g_tmpfs_ops }
+};
+
+int
+vfs_byname(const char *name, struct fs_info **res)
+{
+    if (name == NULL || res == NULL) {
+        return -ENOMEM;
+    }
+
+    if (fs_count == 0) {
+        fs_count = NELEM(fs_list);
+    }
+
+    for (uint16_t i = 0; i < fs_count; ++i) {
+        if (__likely(*name != *fs_list[i].name)) {
+            continue;
+        }
+
+        if (strcmp(name, fs_list[i].name) == 0) {
+            *res = &fs_list[i];
+            return 0;
+        }
+    }
+
+    return -ENOENT;
+}
 
 void
-kmain(void)
+vfs_init(void)
 {
-    console_reset(&g_bootcons);
-    trace("bootcons: console online\n");
-    vm_phys_init();
-    vm_init();
-    acpi_init();
-    vm_kalloc_init();
-    cpu_conf(&g_bsp);
-    vfs_init();
-    cpu_start_aps(&g_bsp);
+    struct fs_info *fip;
+    struct vfsops *ops;
+    uint16_t mount_count = 0;
+    int error;
+
+    fs_count = NELEM(fs_list);
+    for (uint16_t i = 0; i < fs_count; ++i) {
+        fip = &fs_list[i];
+        ops = fip->vfsops;
+
+        /* We rely on the name */
+        if (__unlikely(fip->name == NULL)) {
+            continue;
+        }
+
+        /* Mount if we can */
+        if (ops->mount != NULL) {
+            error = ops->mount(fip, NULL);
+        }
+
+        if (error != 0) {
+            dtrace("failed to mount %s\n", fip->name);
+            continue;
+        }
+
+        dtrace("mounted %s\n", fip->name);
+        fip->is_mounted = 1;
+        ++mount_count;
+    }
+
+    if (mount_count > 0) {
+        dtrace("mounted %d filesystem(s)\n", mount_count);
+    }
 }
