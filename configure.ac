@@ -6,7 +6,8 @@ LD=$(pwd)/cc/toolchain/build-binutils/bin/x86_64-pc-osmora-ld
 ARCH="amd64"
 
 MD_CFLAGS="-mno-sse -mno-sse2 -mno-sse3 -mno-mmx -mno-3dnow -mno-avx -mno-avx2 -mno-80387"
-CFLAGS="-Wno-attributes -nostdlib -nostdinc -ffreestanding  -mcmodel=kernel -fno-stack-protector -D_KERNEL $MD_CFLAGS"
+CFLAGS="-Wno-attributes -nostdlib -nostdinc -ffreestanding  -mcmodel=kernel -fno-stack-protector \\
+        --std=gnu11 -fexceptions -D_KERNEL $MD_CFLAGS"
 
 AC_SUBST(SYS_CFLAGS, [$CFLAGS])
 AC_SUBST(CC, [$CC])
