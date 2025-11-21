@@ -89,3 +89,53 @@ vnode_release(struct vnode *vp)
     kfree(vp);
     return 0;
 }
+
+ssize_t
+vnode_read(struct vnode *vp, void *buf, size_t size, off_t off)
+{
+    struct vop_buf_args args;
+    struct vops *vops;
+
+    if (vp == NULL || buf == NULL) {
+        return -EINVAL;
+    }
+
+    if (size == 0) {
+        return -EINVAL;
+    }
+
+    vops = &vp->vops;
+    if (vops->read == NULL) {
+        return -ENOTSUP;
+    }
+
+    args.buffer = buf;
+    args.len = size;
+    args.offset = off;
+    return vops->read(&args);
+}
+
+ssize_t
+vnode_write(struct vnode *vp, const void *buf, size_t size, off_t off)
+{
+    struct vop_buf_args args;
+    struct vops *vops;
+
+    if (vp == NULL || buf == NULL) {
+        return -EINVAL;
+    }
+
+    if (size == 0) {
+        return -EINVAL;
+    }
+
+    vops = &vp->vops;
+    if (vops->write == NULL) {
+        return -ENOTSUP;
+    }
+
+    args.buffer = (void *)buf;
+    args.len = size;
+    args.offset = off;
+    return vops->write(&args);
+}

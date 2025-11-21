@@ -78,6 +78,31 @@ struct vnode {
 };
 
 /*
+ * Read the contents of a file described by a vnode into
+ * a buffer
+ *
+ * @vp: Vnode to read
+ * @buf: Buffer to read file into
+ * @size: Number of bytes to read
+ * @off: Offset to read starting at
+ *
+ * Returns the number of bytes read
+ */
+ssize_t vnode_read(struct vnode *vp, void *buf, size_t size, off_t off);
+
+/*
+ * Write data into a file described by a vnode
+ *
+ * @vp: Vnode to write
+ * @buf: Buffer to write from
+ * @size: Length of data to write
+ * @off: Offset to write at
+ *
+ * Returns the number of bytes written
+ */
+ssize_t vnode_write(struct vnode *vp, const void *buf, size_t size, off_t off);
+
+/*
  * Initialize a vnode by type
  *
  * @vp_res: Vnode pointer result
