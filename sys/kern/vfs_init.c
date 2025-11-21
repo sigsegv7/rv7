@@ -74,7 +74,6 @@ vfs_init(void)
 {
     struct fs_info *fip;
     struct vfsops *ops;
-    uint16_t mount_count = 0;
     int error;
 
     fs_count = NELEM(fs_list);
@@ -98,10 +97,5 @@ vfs_init(void)
         }
 
         dtrace("initialized %s\n", fip->name);
-        ++mount_count;
-    }
-
-    if (mount_count > 0) {
-        dtrace("mounted %d filesystem(s)\n", mount_count);
     }
 }
