@@ -25,3 +25,4 @@ The following is required to be installed to build the system:
 - autoconf
 - clang
 - as
+- rsync
