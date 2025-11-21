@@ -37,6 +37,7 @@
 /* Filesystem names */
 #define MOUNT_TMPFS "tmpfs"
 
+struct mount;
 struct fs_info;
 
 /*
@@ -55,7 +56,8 @@ struct mount_args {
  * on filesystem objects
  */
 struct vfsops {
-    int(*mount)(struct fs_info *fip, void *data);
+    int(*mount)(struct fs_info *fip, struct mount *mpoint);
+    int(*init)(struct fs_info *fip);
 };
 
 /*
@@ -63,12 +65,10 @@ struct vfsops {
  *
  * @name: Name of filesystem
  * @vfsops: Represents operations that can be performed
- * @is_mounted: Set if filesystem is mounted
  */
 struct fs_info {
     char *name;
     struct vfsops *vfsops;
-    uint8_t is_mounted : 1;
 };
 
 /*

@@ -87,18 +87,17 @@ vfs_init(void)
             continue;
         }
 
-        /* Mount if we can */
-        if (ops->mount != NULL) {
-            error = ops->mount(fip, NULL);
+        /* Initialize the filesystem */
+        if (ops->init != NULL) {
+            error = ops->init(fip);
         }
 
         if (error != 0) {
-            dtrace("failed to mount %s\n", fip->name);
+            dtrace("failed to init %s\n", fip->name);
             continue;
         }
 
-        dtrace("mounted %s\n", fip->name);
-        fip->is_mounted = 1;
+        dtrace("initialized %s\n", fip->name);
         ++mount_count;
     }
 

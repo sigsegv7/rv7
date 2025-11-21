@@ -34,7 +34,20 @@
  * Mount a filesystem
  */
 static int
-tmpfs_mount(struct fs_info *fip, void *data)
+tmpfs_mount(struct fs_info *fip, struct mount *mp)
+{
+    int error;
+
+    error = vnode_init(&mp->vp, VDIR);
+    if (error < 0) {
+        return error;
+    }
+
+    return 0;
+}
+
+static int
+tmpfs_init(struct fs_info *fip)
 {
     struct mount_args mountargs;
     int error;
@@ -50,5 +63,6 @@ tmpfs_mount(struct fs_info *fip, void *data)
 }
 
 struct vfsops g_tmpfs_ops = {
-    .mount = tmpfs_mount
+    .mount = tmpfs_mount,
+    .init = tmpfs_init
 };

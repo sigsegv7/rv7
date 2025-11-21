@@ -74,6 +74,7 @@ int
 mount(struct mount_args *margs)
 {
     struct fs_info *fip;
+    struct vfsops *vfsops;
     struct mount *mp;
     int error;
 
@@ -95,13 +96,18 @@ mount(struct mount_args *margs)
         return error;
     }
 
+    vfsops = fip->vfsops;
+    if (vfsops->mount == NULL) {
+        return -ENOTSUP;
+    }
+
     mp = kalloc(sizeof(*mp));
     if (mp == NULL) {
         return -ENOMEM;
     }
 
     mp->fip = fip;
-    error = vnode_init(&mp->vp, VDIR);
+    error = vfsops->mount(fip, mp);
     if (error < 0) {
         kfree(mp);
         return error;
