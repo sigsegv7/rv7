@@ -116,9 +116,9 @@ mount(struct mount_args *margs)
     /*
      * TODO: We'd need to do a namei() here, add by-path
      */
-    spinlock_acquire(&mount_lock, false);
+    spinlock_acquire(&mount_lock, true);
     TAILQ_INSERT_TAIL(&mountlist, mp, link);
-    spinlock_release(&mount_lock, false);
+    spinlock_release(&mount_lock, true);
     return 0;
 }
 
@@ -137,7 +137,7 @@ mount_lookup(const char *name, struct mount **mres)
         return -EINVAL;
     }
 
-    spinlock_acquire(&mount_lock, false);
+    spinlock_acquire(&mount_lock, true);
     TAILQ_FOREACH(iter, &mountlist, link) {
         fip = iter->fip;
         if (__likely(*name != *fip->name)) {
@@ -150,7 +150,7 @@ mount_lookup(const char *name, struct mount **mres)
         }
     }
 
-    spinlock_release(&mount_lock, false);
+    spinlock_release(&mount_lock, true);
     if (mount == NULL) {
         return -ENOENT;
     }

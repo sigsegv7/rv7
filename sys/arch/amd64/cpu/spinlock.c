@@ -29,12 +29,15 @@
 
 #include <sys/cdefs.h>
 #include <mu/spinlock.h>
+#include <mu/irq.h>
 
 void
 mu_spinlock_acq(volatile size_t *lock, int flags)
 {
-    if (ISSET(flags, SPINLOCK_INTTOG)) {
-        asm volatile("cli");
+    bool irq_en = mu_irq_state();
+
+    if (ISSET(flags, SPINLOCK_INTTOG) && irq_en) {
+        __asmv("cli");
     }
 
     __asmv(
@@ -48,6 +51,11 @@ mu_spinlock_acq(volatile size_t *lock, int flags)
         : "r" (lock)
         : "memory", "rax"
     );
+
+    if (ISSET(flags, SPINLOCK_INTTOG)) {
+        if (irq_en && !mu_irq_state())
+            __asmv("sti");
+    }
 }
 
 void
@@ -60,8 +68,4 @@ mu_spinlock_rel(volatile size_t *lock, int flags)
         :
         : "memory", "rax"
     );
-
-    if (ISSET(flags, SPINLOCK_INTTOG)) {
-        asm volatile("sti");
-    }
 }

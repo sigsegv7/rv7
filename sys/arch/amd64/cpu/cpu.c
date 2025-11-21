@@ -29,10 +29,20 @@
 
 #include <sys/types.h>
 #include <sys/cdefs.h>
+#include <sys/param.h>
 #include <os/trace.h>
 #include <mu/cpu.h>
 #include <md/msr.h>
 #include <md/lapic.h>
+
+bool
+mu_irq_state(void)
+{
+    uint64_t rflags;
+
+    __asmv("pushfq; pop %0" : "=r" (rflags) :: "memory");
+    return ISSET(rflags, BIT(9)) != 0;
+}
 
 struct cpu_info *
 cpu_self(void)
