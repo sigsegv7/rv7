@@ -45,6 +45,7 @@ typedef char       int8_t;
 typedef short      int16_t;
 typedef int        int32_t;
 typedef long long  int64_t;
+typedef int32_t    mode_t;
 
 /* Size types */
 typedef uint64_t    size_t;
