@@ -34,6 +34,7 @@
 #include <kern/panic.h>
 #include <kern/mount.h>
 #include <kern/vfs.h>
+#include <kern/namei.h>
 #include <lib/stdbool.h>
 #include <lib/string.h>
 #include <vm/kalloc.h>
@@ -70,25 +71,16 @@ mountlist_init(void)
     is_mountlist_init = true;
 }
 
-int
-mount(struct mount_args *margs)
+static int
+mount_by_fsname(struct mount_args *margs, struct mount **mp_res)
 {
+    struct mount *mp;
     struct fs_info *fip;
     struct vfsops *vfsops;
-    struct mount *mp;
     int error;
 
-    if (margs == NULL) {
+    if (margs == NULL || mp_res == NULL) {
         return -EINVAL;
-    }
-
-    if (margs->target == NULL || margs->fstype == NULL) {
-        return -EINVAL;
-    }
-
-    /* Initialize the mountlist if needed */
-    if (!is_mountlist_init) {
-        mountlist_init();
     }
 
     error = vfs_byname(margs->fstype, &fip);
@@ -113,9 +105,34 @@ mount(struct mount_args *margs)
         return error;
     }
 
-    /*
-     * TODO: We'd need to do a namei() here, add by-path
-     */
+    *mp_res = mp;
+}
+
+int
+mount(struct mount_args *margs)
+{
+    struct mount *mp;
+    struct nameidata ndp;
+    int error;
+
+    if (margs == NULL) {
+        return -EINVAL;
+    }
+
+    if (margs->target == NULL || margs->fstype == NULL) {
+        return -EINVAL;
+    }
+
+    /* Initialize the mountlist if needed */
+    if (!is_mountlist_init) {
+        mountlist_init();
+    }
+
+    error = mount_by_fsname(margs, &mp);
+    if (error != 0) {
+        return error;
+    }
+
     spinlock_acquire(&mount_lock, true);
     TAILQ_INSERT_TAIL(&mountlist, mp, link);
     spinlock_release(&mount_lock, true);
