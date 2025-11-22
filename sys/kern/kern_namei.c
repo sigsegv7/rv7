@@ -97,6 +97,6 @@ namei(struct nameidata *ndp)
         namebuf_idx = 0;
     }
 
-    ndp->vp_res = vp;
+    *ndp->vp_res = vp;
     return 0;
 }

@@ -38,7 +38,7 @@
  */
 struct nameidata {
     const char *pathname;
-    struct vnode *vp_res;
+    struct vnode **vp_res;
     int flags;
 };
 
