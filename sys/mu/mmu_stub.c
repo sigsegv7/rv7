@@ -40,6 +40,8 @@ mu_pmap_map(struct mmu_vas *vas, uintptr_t pa, uintptr_t va, uint16_t prot,
     (void)va;
     (void)prot;
     (void)ps;
+
+    return 0;
 }
 
 __weak int
@@ -56,6 +58,8 @@ __weak int
 mu_pmap_forkvas(struct mmu_vas *result)
 {
     (void)result;
+
+    return 0;
 }
 
 __weak void
@@ -68,10 +72,14 @@ __weak int
 mu_pmap_readvas(struct mmu_vas *vas)
 {
     (void)vas;
+
+    return 0;
 }
 
 __weak int
 mu_pmap_writevas(struct mmu_vas *vas)
 {
     (void)vas;
+
+    return 0;
 }
