@@ -4,6 +4,8 @@
 /boot
 /cc
 /sys/rv7
+/root/etc/
+/initramfs.omar
 *.sys
 *.log
 *.status

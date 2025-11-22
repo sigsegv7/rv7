@@ -6,6 +6,7 @@ ARCH = @ARCH@
 ISO = rv7.iso
 SYS_CFLAGS = @SYS_CFLAGS@
 SYSROOT = root
+OMAR = $(shell pwd)/tools/omar/bin/omar
 
 .PHONY: all
 all: $(SYSROOT) sys iso
@@ -35,6 +36,9 @@ $(SYSROOT):
 	mkdir -p $(SYSROOT)/usr/include/
 	mkdir -p $(SYSROOT)/usr/bin/
 	mkdir -p $(SYSROOT)/usr/sbin/
+	mkdir -p $(SYSROOT)/etc/
+	cp -r etc/* $(SYSROOT)/etc
+	- $(OMAR) -i $(shell pwd)/$(SYSROOT) -o $(shell pwd)/initramfs.omar
 
 .PHONY: run
 run:

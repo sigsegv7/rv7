@@ -11,4 +11,5 @@ then
     make -C boot/limine
 fi
 
+cd tools/omar; make; cd ../../
 autoconf
