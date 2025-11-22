@@ -38,6 +38,7 @@ namei(struct nameidata *ndp)
     struct vops *vops;
     struct mount *mpoint = NULL;
     struct vnode *vp = NULL;
+    struct vnode *parent = NULL;
     const char *p;
     int error;
     char namebuf[NAME_MAX];
@@ -88,8 +89,13 @@ namei(struct nameidata *ndp)
             continue;
         }
 
+        parent = vp;
         vops = &vp->vops;
         error = vnode_lookup(vp, namebuf, &vp);
+        if (error != 0 && ISSET(ndp->flags, NAMEI_PARENT)) {
+            break;
+        }
+
         if (error != 0) {
             return error;
         }
@@ -97,6 +103,10 @@ namei(struct nameidata *ndp)
         namebuf_idx = 0;
     }
 
-    *ndp->vp_res = vp;
+    if (ISSET(ndp->flags, NAMEI_PARENT)) {
+        *ndp->vp_res = parent;
+    } else {
+        *ndp->vp_res = vp;
+    }
     return 0;
 }

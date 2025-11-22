@@ -33,6 +33,8 @@
 #include <sys/types.h>
 #include <sys/param.h>
 
+#define NAMEI_PARENT BIT(0)
+
 /*
  * Represents arguments to be passed with namei()
  */
