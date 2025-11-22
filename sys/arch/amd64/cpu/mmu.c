@@ -54,10 +54,10 @@
 #define PTE_NX          BIT(63)       /* Execute-disable */
 
 typedef enum {
-    PMAP_PML1,
-    PMAP_PML2,
+    PMAP_PML4,
     PMAP_PML3,
-    PMAP_PML4
+    PMAP_PML2,
+    PMAP_PML1,
 } pagelevel_t;
 
 /*
@@ -164,6 +164,7 @@ pmap_get_level(struct mmu_vas *vas, uintptr_t va, bool en_alloc, pagelevel_t lvl
 
         pmap[index] = phys | (PTE_P | PTE_RW | PTE_US);
         pmap = (uintptr_t *)tmp;
+        --curlvl;
     }
 
     return pmap;
