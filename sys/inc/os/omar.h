@@ -27,33 +27,31 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+#ifndef _OS_OMAR_H_
+#define _OS_OMAR_H_ 1
+
 #include <sys/types.h>
-#include <dev/cons/cons.h>
-#include <os/trace.h>
-#include <os/sched.h>
-#include <os/omar.h>
-#include <kern/vfs.h>
-#include <acpi/acpi.h>
-#include <mu/cpu.h>
-#include <vm/phys.h>
-#include <vm/vm.h>
-#include <vm/kalloc.h>
 
-struct cpu_info g_bsp;
-struct console g_bootcons;
-void kmain(void);
+/*
+ * File or directory.
+ */
+struct initrd_node {
+    void *data;             /* File data */
+    size_t size;            /* File size */
+    mode_t mode;            /* Perms and type */
+};
 
-void
-kmain(void)
-{
-    console_reset(&g_bootcons);
-    trace("bootcons: console online\n");
-    vm_phys_init();
-    vm_init();
-    acpi_init();
-    vm_kalloc_init();
-    cpu_conf(&g_bsp);
-    vfs_init();
-    omar_init();
-    cpu_start_aps(&g_bsp);
-}
+/*
+ * Initialize the OMAR subsystem
+ */
+void omar_init(void);
+
+/*
+ * Get a file from OMAR root
+ *
+ * @path: Path of file to get.
+ * @res: Pointer to new resulting node.
+ */
+int omar_lookup(const char *path, struct initrd_node *res);
+
+#endif  /* !_OS_OMAR_H_ */

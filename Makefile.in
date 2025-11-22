@@ -18,6 +18,7 @@ sys:
 .PHONY: iso
 iso:
 	mkdir -p iso_root/boot/
+	cp -f initramfs.omar iso_root/boot
 	cp data/boot/wallpaper.jpg iso_root/boot/
 	cp data/boot/limine.conf boot/limine/limine-bios.sys \
         boot/limine/limine-bios-cd.bin boot/limine/limine-uefi-cd.bin iso_root/
