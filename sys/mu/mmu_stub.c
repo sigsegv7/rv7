@@ -43,6 +43,16 @@ mu_pmap_map(struct mmu_vas *vas, uintptr_t pa, uintptr_t va, uint16_t prot,
 }
 
 __weak int
+mu_pmap_unmap(struct mmu_vas *vas, uintptr_t va, pagesize_t ps)
+{
+    (void)vas;
+    (void)va;
+    (void)ps;
+
+    return 0;
+}
+
+__weak int
 mu_pmap_forkvas(struct mmu_vas *result)
 {
     (void)result;

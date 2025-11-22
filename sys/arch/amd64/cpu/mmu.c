@@ -193,6 +193,27 @@ mu_pmap_map(struct mmu_vas *vas, uintptr_t pa, uintptr_t va,
 }
 
 int
+mu_pmap_unmap(struct mmu_vas *vas, uintptr_t va, pagesize_t ps)
+{
+    uintptr_t *pagetbl;
+    size_t index;
+
+    if (vas == NULL) {
+        return -EINVAL;
+    }
+
+    pagetbl = pmap_get_level(vas, va, false, PMAP_PML1);
+    if (pagetbl == NULL) {
+        return 0;
+    }
+
+    index = pmap_get_index(va, PMAP_PML1);
+    pagetbl[index] = 0;
+    pmap_invlpg(va);
+    return 0;
+}
+
+int
 mu_pmap_readvas(struct mmu_vas *vas)
 {
     __asmv(

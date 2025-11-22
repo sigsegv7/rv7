@@ -50,6 +50,15 @@ __strong int mu_pmap_map(
 );
 
 /*
+ * Destroy a virtual to physical address mapping
+ *
+ * @vas: Virtual addres space to unmap from
+ * @va: Virtual address to unmap
+ * @ps: Pagesize of region covered by virtual address
+ */
+__strong int mu_pmap_unmap(struct mmu_vas *vas, uintptr_t va, pagesize_t ps);
+
+/*
  * Copy the current VAS leaving the user-side
  * zeroed
  */
